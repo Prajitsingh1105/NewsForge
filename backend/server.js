@@ -41,7 +41,10 @@ app.use('/uploads', express.static(uploadPath));
 // ======================
 app.use('/api/admin', authRoutes);
 app.use('/api/blogs', blogRoutes);
-
+app.use("/api", routes);
+app.get("/", (req, res) => {
+  res.send("🚀 NewsForge API is live");
+});
 // ======================
 // Health check
 // ======================
@@ -64,9 +67,6 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/newsforge
 // ======================
 const PORT = process.env.PORT || 5000;
 
-app.get("/api", (req, res) => {
-  res.json({ message: "API is working" });
-});
 
 app.listen(PORT, () => {
   console.log(`🚀 NewsForge API running on port ${PORT}`);
