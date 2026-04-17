@@ -64,6 +64,10 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/newsforge
 // ======================
 const PORT = process.env.PORT || 5000;
 
+app.get("/api", (req, res) => {
+  res.json({ message: "API is working" });
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 NewsForge API running on port ${PORT}`);
 });
