@@ -1,0 +1,104 @@
+import axios from 'axios';
+import Cookies from 'js-cookie';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_DEFAULT_IMAGE = 'fallback-blog';
+
+const api = axios.create({
+  baseURL: `${API_URL}/api`,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// Attach JWT token to every request
+api.interceptors.request.use((config) => {
+  const token = Cookies.get('admin_token');
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+// Redirect to login on 401/403
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      Cookies.remove('admin_token');
+
+      if (
+        typeof window !== 'undefined' &&
+        window.location.pathname.startsWith('/admin')
+      ) {
+        window.location.href = '/admin/login';
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export const blogApi = {
+  getAll: (params) => api.get('/blogs', { params }),
+  getById: (id) => api.get(`/blogs/${id}`),
+  create: (data) => api.post('/blogs', data),
+  update: (id, data) => api.put(`/blogs/${id}`, data),
+  delete: (id) => api.delete(`/blogs/${id}`),
+  getStats: () => api.get('/blogs/stats'),
+};
+
+export const authApi = {
+  login: (username, password) => api.post('/admin/login', { username, password }),
+  verify: () => api.get('/admin/verify'),
+};
+
+export const CATEGORIES = [
+  'All',
+  'Technology',
+  'AI',
+  'Sports',
+  'Politics',
+  'Science',
+  'Business',
+  'Entertainment',
+  'Health',
+  'World',
+];
+
+export const CATEGORY_COLORS = {
+  Technology: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  AI: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  Sports: 'bg-green-500/10 text-green-400 border-green-500/20',
+  Politics: 'bg-red-500/10 text-red-400 border-red-500/20',
+  Science: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  Business: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  Entertainment: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+  Health: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  World: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+};
+
+export const getImageUrl = (imagePath) => {
+  if (!imagePath) {
+    return '/images/fallback-blog.jpg';
+  }
+
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+
+  if (imagePath.startsWith('/uploads/')) {
+    return `${API_URL}${imagePath}`;
+  }
+
+  const normalizedId = String(imagePath).trim().replace(/^\/+/, '');
+
+  if (!CLOUDINARY_CLOUD_NAME) {
+    return '/images/fallback-blog.jpg';
+  }
+
+  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto,d_${CLOUDINARY_DEFAULT_IMAGE}/${normalizedId}`;
+};
+
+export default api;
