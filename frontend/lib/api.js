@@ -6,8 +6,7 @@ const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_DEFAULT_IMAGE = 'fallback-blog';
 
 const api = axios.create({
-  baseURL: `${API_URL}/api`,
-  headers: { 'Content-Type': 'application/json' },
+  baseURL: `${API_URL}/api`
 });
 
 // Attach JWT token to every request
@@ -43,8 +42,23 @@ api.interceptors.response.use(
 export const blogApi = {
   getAll: (params) => api.get('/blogs', { params }),
   getById: (id) => api.get(`/blogs/${id}`),
-  create: (data) => api.post('/blogs', data),
-  update: (id, data) => api.put(`/blogs/${id}`, data),
+
+  // 🔥 FIXED CREATE
+  create: (formData) =>
+    api.post('/blogs', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+
+  // 🔥 FIXED UPDATE
+  update: (id, formData) =>
+    api.put(`/blogs/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+
   delete: (id) => api.delete(`/blogs/${id}`),
   getStats: () => api.get('/blogs/stats'),
 };
