@@ -80,25 +80,22 @@ export const CATEGORY_COLORS = {
 };
 
 export const getImageUrl = (imagePath) => {
-  if (!imagePath) {
-    return '/images/fallback-blog.jpg';
+  if (!imagePath) return ""; // no fallback
+
+  if (imagePath.startsWith("http")) {
+    return imagePath; // Cloudinary URL already
   }
 
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath;
-  }
-
-  if (imagePath.startsWith('/uploads/')) {
+  if (imagePath.startsWith("/uploads/")) {
     return `${API_URL}${imagePath}`;
   }
 
-  const normalizedId = String(imagePath).trim().replace(/^\/+/, '');
-
   if (!CLOUDINARY_CLOUD_NAME) {
-    return '/images/fallback-blog.jpg';
+    console.error("Cloudinary cloud name missing");
+    return "";
   }
 
-  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto,d_${CLOUDINARY_DEFAULT_IMAGE}/${normalizedId}`;
-};
+  const normalizedId = String(imagePath).trim().replace(/^\/+/, "");
 
-export default api;
+  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto/${normalizedId}`;
+};
