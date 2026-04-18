@@ -160,6 +160,7 @@ const updateBlog = async (req, res) => {
       const uploaded = await uploadToCloudinary(req.file.buffer, 'blogs');
       blog.image = uploaded.secure_url;
       blog.imagePublicId = uploaded.public_id;
+      console.log("FILE RECEIVED:", req.file);
     }
 
     await blog.save();
