@@ -41,10 +41,7 @@ app.use('/uploads', express.static(uploadPath));
 // ======================
 app.use('/api/admin', authRoutes);
 app.use('/api/blogs', blogRoutes);
-app.use("/api", routes);
-app.get("/", (req, res) => {
-  res.send("🚀 NewsForge API is live");
-});
+
 // ======================
 // Health check
 // ======================
