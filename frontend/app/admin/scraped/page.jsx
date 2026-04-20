@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -13,48 +14,38 @@ import {
 } from 'lucide-react';
 
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { CATEGORY_COLORS, getImageUrl } from '@/lib/api';
+import { CATEGORY_COLORS, getImageUrl, blogApi } from '@/lib/api';
 
 export default function ScrapedPage() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  // 🔥 DUMMY DATA
+  // 🔥 FETCH SCRAPED DATA FROM BACKEND
   useEffect(() => {
-    const dummy = [
-      {
-        _id: '1',
-        title: 'India sees rapid growth in AI adoption across industries',
-        category: 'AI',
-        sourceName: 'Hindustan Times',
-        image: null,
-        createdAt: new Date(),
-        views: 0
-      },
-      {
-        _id: '2',
-        title: 'IPL 2026: Thrilling match ends in last over drama',
-        category: 'Sports',
-        sourceName: 'Indian Express',
-        image: null,
-        createdAt: new Date(),
-        views: 0
-      },
-      {
-        _id: '3',
-        title: 'Global markets react to economic slowdown fears',
-        category: 'Business',
-        sourceName: 'Reuters',
-        image: null,
-        createdAt: new Date(),
-        views: 0
-      }
-    ];
-
-    setBlogs(dummy);
-    setLoading(false);
+    fetchScrapedBlogs();
   }, []);
+
+  const fetchScrapedBlogs = async () => {
+    try {
+      const res = await blogApi.getScraped();
+      setBlogs(res.data.blogs || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔥 PUBLISH FUNCTION
+  const handlePublish = async (id) => {
+    try {
+      await blogApi.publishScraped(id);
+      setBlogs(prev => prev.filter(b => b._id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const filtered = blogs.filter(b =>
     b.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -66,7 +57,7 @@ export default function ScrapedPage() {
       <AdminSidebar />
 
       <div className="flex-1 overflow-auto">
-        
+
         {/* Header */}
         <div className="sticky top-0 z-30 bg-[var(--bg-primary)]/80 backdrop-blur-sm border-b border-[var(--border)] px-6 py-4">
           <div className="flex items-center justify-between">
@@ -183,12 +174,23 @@ export default function ScrapedPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="opacity-0 group-hover:opacity-100 transition">
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+
+                      {/* Preview */}
                       <Link href={`/admin/scraped/${blog._id}`}>
                         <button className="p-2 rounded-lg hover:bg-[var(--accent)]/10">
                           <Eye size={16} />
                         </button>
                       </Link>
+
+                      {/* Publish */}
+                      <button
+                        onClick={() => handlePublish(blog._id)}
+                        className="px-3 py-1 text-xs bg-green-500/10 text-green-400 rounded-lg hover:bg-green-500/20"
+                      >
+                        Publish
+                      </button>
+
                     </div>
 
                   </motion.div>
