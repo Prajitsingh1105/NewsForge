@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { LayoutDashboard, FilePlus, LogOut, Zap, ExternalLink, ChevronRight } from 'lucide-react';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
+import { Bot } from 'lucide-react';
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -17,10 +18,10 @@ export default function AdminSidebar() {
   };
 
   const navItems = [
-    { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { href: '/admin/create', icon: FilePlus, label: 'New Post' },
-    { href: '/admin/scraped', icon: Bot, label: 'Scraped News' }
-  ];
+  { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/admin/create', icon: FilePlus, label: 'New Post' },
+  { href: '/admin/scraped', icon: Bot, label: 'Scraped News' }, // ✅ THIS
+];
 
   return (
     <aside className="w-64 shrink-0 hidden lg:flex flex-col bg-[var(--bg-card)] border-r border-[var(--border)] min-h-screen sticky top-0">
