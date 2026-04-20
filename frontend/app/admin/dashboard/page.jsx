@@ -57,6 +57,7 @@ export default function AdminDashboard() {
     b.title.toLowerCase().includes(search.toLowerCase()) ||
     b.category.toLowerCase().includes(search.toLowerCase())
   );
+  console.log("NEW BUILD TEST");
 
   const statCards = [
     { label: 'Total Posts', value: stats?.total || 0, icon: FileText, color: 'text-blue-400', bg: 'bg-blue-500/10' },
