@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Cookies from 'js-cookie';
-import { authApi } from '@/lib/api';
+import { authApi } from '../../lib/api';
 
 export default function AdminLayout({ children }) {
   const router = useRouter();

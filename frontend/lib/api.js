@@ -3,7 +3,6 @@ import Cookies from 'js-cookie';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const CLOUDINARY_DEFAULT_IMAGE = 'fallback-blog';
 
 const api = axios.create({
   baseURL: `${API_URL}/api`
@@ -43,7 +42,7 @@ export const blogApi = {
   getAll: (params) => api.get('/blogs', { params }),
   getById: (id) => api.get(`/blogs/${id}`),
 
-  // 🔥 FIXED CREATE
+  // CREATE
   create: (formData) =>
     api.post('/blogs', formData, {
       headers: {
@@ -51,7 +50,7 @@ export const blogApi = {
       },
     }),
 
-  // 🔥 FIXED UPDATE
+  // UPDATE
   update: (id, formData) =>
     api.put(`/blogs/${id}`, formData, {
       headers: {
@@ -62,14 +61,20 @@ export const blogApi = {
   delete: (id) => api.delete(`/blogs/${id}`),
   getStats: () => api.get('/blogs/stats'),
 
-  // 🔥 ADD THIS
-  getScraped: () => api.get('/blogs/admin/scraped'),
-
-  // 🔥 ADD THIS
-  publishScraped: (id) =>
-    api.put(`/blogs/admin/publish/${id}`),
-
-  
+  // SCRAPER APIs
+  getScraped: (page = 1, limit = 20, search = '') => 
+    api.get('/scraped_blogs/scraped', { 
+      params: { page, limit, search } 
+    }),
+  publishScraped: (id) => api.put(`/scraped_blogs/publish/${id}`),
+  deleteScraped: (id) => api.delete(`/scraped_blogs/scraped/${id}`), // ADD THIS
+  getScrapedById: (id) => api.get(`/scraped_blogs/scraped/${id}`), // ADD THIS
+  publishScrapedWithData: (id, formData) =>
+    api.put(`/scraped_blogs/publish/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
 };
 
 export const authApi = {
@@ -103,10 +108,10 @@ export const CATEGORY_COLORS = {
 };
 
 export const getImageUrl = (imagePath) => {
-  if (!imagePath) return ""; // no fallback
+  if (!imagePath) return "";
 
   if (imagePath.startsWith("http")) {
-    return imagePath; // Cloudinary URL already
+    return imagePath;
   }
 
   if (imagePath.startsWith("/uploads/")) {

@@ -7,6 +7,7 @@ const fs = require('fs');
 
 const authRoutes = require('./routes/auth');
 const blogRoutes = require('./routes/blogs');
+const scrapedRoutes = require('./routes/scraped'); // ADD THIS
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use('/uploads', express.static(uploadPath));
 // ======================
 app.use('/api/admin', authRoutes);
 app.use('/api/blogs', blogRoutes);
+app.use('/api/scraped_blogs', scrapedRoutes); // ADD THIS - scraped routes will be under /api/scraped
 
 // ======================
 // Health check
@@ -63,7 +65,6 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/newsforge
 // Start Server
 // ======================
 const PORT = process.env.PORT || 5000;
-
 
 app.listen(PORT, () => {
   console.log(`🚀 NewsForge API running on port ${PORT}`);

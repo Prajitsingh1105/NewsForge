@@ -13,14 +13,6 @@ const {
   getStats,
 } = require("../controllers/blogController");
 
-// 🔥 NEW: scraper controllers
-const {
-  createScrapedBlog,
-  getScrapedBlogs,
-  publishScrapedBlog,
-} = require("../controllers/scraperController");
-
-
 // ================= MULTER CONFIG ================= //
 
 // ✅ Use memory storage (Cloudinary upload later)
@@ -82,7 +74,6 @@ const uploadSingleImage = (req, res, next) => {
   });
 };
 
-
 // ================= ROUTES ================= //
 
 // 🔓 Public Routes
@@ -90,17 +81,6 @@ router.get("/", getBlogs);
 
 // 🔐 Protected Routes
 router.get("/stats", authMiddleware, getStats);
-
-// ================= SCRAPER ROUTES ================= //
-
-// 🔓 Scraper pushes data (you can secure later with API key)
-router.post("/scraped", createScrapedBlog);
-
-// 🔐 Admin: get all scraped drafts
-router.get("/admin/scraped", authMiddleware, getScrapedBlogs);
-
-// 🔐 Publish scraped blog
-router.put("/admin/publish/:id", authMiddleware, publishScrapedBlog);
 
 // ================= MANUAL BLOG ROUTES ================= //
 
@@ -122,6 +102,5 @@ router.delete("/:id", authMiddleware, deleteBlog);
 
 // ⚠️ KEEP THIS LAST (VERY IMPORTANT)
 router.get("/:id", getBlog);
-
 
 module.exports = router;

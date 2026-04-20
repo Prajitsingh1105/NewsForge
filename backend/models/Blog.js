@@ -111,11 +111,21 @@ const blogSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+  isScraped: {
+    type: Boolean,
+    default: false
   },
-  {
-    timestamps: true,
+  originalScrapedId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ScrapedNews'
+  },
+  sourceName: {
+    type: String
+  },
+  sourceUrl: {
+    type: String
   }
-);
+}, { timestamps: true });
 
 
 // ================= MIDDLEWARE ================= //

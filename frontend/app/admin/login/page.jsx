@@ -24,6 +24,7 @@ export default function AdminLoginPage() {
     setLoading(true);
     try {
       const res = await authApi.login(username, password);
+      console.log('Login response:', res.data);
       Cookies.set('admin_token', res.data.token, { expires: 1, sameSite: 'lax' });
       toast.success('Welcome back, Admin!');
       router.push('/admin/dashboard');
