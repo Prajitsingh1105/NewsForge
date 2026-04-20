@@ -20,6 +20,7 @@ export default function ScrapedNewsPage() {
         setBlogs(scraped);
       } catch (err) {
         console.error(err);
+        console.log("ERROR");
       } finally {
         setLoading(false);
       }
