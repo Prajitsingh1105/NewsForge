@@ -115,7 +115,7 @@ router.get('/scraped/:id', authMiddleware, async (req, res) => {
 });
 
 // UPDATED: Publish scraped news with custom content (AI enhanced)
-router.put('/admin/publish/:id', authMiddleware, async (req, res) => {
+router.put('/publish/:id', authMiddleware, async (req, res) => {
   try {
     const scrapedNews = await ScrapedNews.findById(req.params.id);
     if (!scrapedNews) {
