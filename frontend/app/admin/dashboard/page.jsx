@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { FilePlus, Pencil, Trash2, Eye, TrendingUp, FileText, Star, BarChart2, Search, AlertTriangle, LogOut } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { blogApi, CATEGORY_COLORS, getImageUrl } from '@/lib/api';
+import { blogApi, CATEGORY_COLORS, getImageUrl } from '../../lib/api.js';
 import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';

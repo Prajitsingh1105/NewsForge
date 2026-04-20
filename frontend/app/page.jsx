@@ -5,12 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, Clock, ArrowRight, Flame, Zap } from 'lucide-react';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
-import BlogCard from '@/components/blog/BlogCard';
-import CategoryTabs from '@/components/blog/CategoryTabs';
-import { CardSkeleton } from '@/components/ui/Skeletons';
-import { blogApi, getImageUrl } from '@/lib/api';
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
+import BlogCard from '../components/blog/BlogCard';
+import CategoryTabs from '../components/blog/CategoryTabs';
+import { CardSkeleton } from '../components/ui/Skeletons';
+import { blogApi, getImageUrl } from '../../lib/api.js';
 import { formatDistanceToNow } from 'date-fns';
 
 const LOCAL_FALLBACK_IMAGE = '/images/fallback-blog.jpg';

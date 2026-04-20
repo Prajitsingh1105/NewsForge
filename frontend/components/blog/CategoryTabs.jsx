@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { CATEGORIES } from '@/lib/api';
+import { CATEGORIES } from '../../lib/api.js';
 
 const CATEGORY_ICONS = {
   All: '✦', Technology: '💻', AI: '🤖', Sports: '⚽',

@@ -1,6 +1,6 @@
 'use client';
 import { useParams } from 'next/navigation';
-import BlogForm from '@/components/admin/BlogForm';
+import BlogForm from '../../../../components/admin/BlogForm';
 
 export default function EditPage() {
   const { id } = useParams();

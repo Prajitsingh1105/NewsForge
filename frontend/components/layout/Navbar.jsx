@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Moon, Sun, Menu, X, Zap, ChevronRight } from 'lucide-react';
-import { useTheme } from '@/hooks/useTheme';
-import { blogApi } from '@/lib/api';
+import { useTheme } from '../../hooks/useTheme.js';
+import { blogApi } from '../../lib/api.js';
 
 export default function Navbar() {
   const { isDark, toggle } = useTheme();

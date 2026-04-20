@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Clock, Eye, ArrowUpRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { CATEGORY_COLORS } from '@/lib/api';
+import { CATEGORY_COLORS } from '../../lib/api.js';
 
 export default function BlogCard({ blog, variant = 'default', index = 0 }) {
   const imageUrl = blog.image || '';
