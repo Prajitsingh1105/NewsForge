@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 
 const authMiddleware = require("../middleware/auth");
+
 const {
   getBlogs,
   getBlog,
@@ -12,10 +13,20 @@ const {
   getStats,
 } = require("../controllers/blogController");
 
-// ✅ Use memory storage (we'll send buffer to Cloudinary)
+// 🔥 NEW: scraper controllers
+const {
+  createScrapedBlog,
+  getScrapedBlogs,
+  publishScrapedBlog,
+} = require("../controllers/scraperController");
+
+
+// ================= MULTER CONFIG ================= //
+
+// ✅ Use memory storage (Cloudinary upload later)
 const storage = multer.memoryStorage();
 
-// ✅ File filter (only images allowed)
+// ✅ File filter
 const fileFilter = (req, file, cb) => {
   if (!file) return cb(null, true);
 
@@ -34,14 +45,14 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// ✅ Multer config
+// ✅ Multer instance
 const upload = multer({
   storage,
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
-// ✅ Custom middleware for better error handling
+// ✅ Custom wrapper for error handling
 const uploadSingleImage = (req, res, next) => {
   const handler = upload.single("image");
 
@@ -76,16 +87,28 @@ const uploadSingleImage = (req, res, next) => {
 
 // 🔓 Public Routes
 router.get("/", getBlogs);
-router.get("/:id", getBlog);
 
 // 🔐 Protected Routes
 router.get("/stats", authMiddleware, getStats);
 
+// ================= SCRAPER ROUTES ================= //
+
+// 🔓 Scraper pushes data (you can secure later with API key)
+router.post("/scraped", createScrapedBlog);
+
+// 🔐 Admin: get all scraped drafts
+router.get("/admin/scraped", authMiddleware, getScrapedBlogs);
+
+// 🔐 Publish scraped blog
+router.put("/publish/:id", authMiddleware, publishScrapedBlog);
+
+// ================= MANUAL BLOG ROUTES ================= //
+
 router.post(
   "/",
   authMiddleware,
-  uploadSingleImage,   // ✅ handles file
-  createBlog           // ✅ uploads to Cloudinary inside controller
+  uploadSingleImage,
+  createBlog
 );
 
 router.put(
@@ -96,5 +119,9 @@ router.put(
 );
 
 router.delete("/:id", authMiddleware, deleteBlog);
+
+// ⚠️ KEEP THIS LAST (VERY IMPORTANT)
+router.get("/:id", getBlog);
+
 
 module.exports = router;
