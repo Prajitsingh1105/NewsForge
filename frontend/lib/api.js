@@ -61,6 +61,15 @@ export const blogApi = {
 
   delete: (id) => api.delete(`/blogs/${id}`),
   getStats: () => api.get('/blogs/stats'),
+
+  // 🔥 ADD THIS
+  getScraped: () => api.get('/blogs/admin/scraped'),
+
+  // 🔥 ADD THIS
+  publishScraped: (id) =>
+    api.put(`/blogs/admin/publish/${id}`),
+
+  
 };
 
 export const authApi = {

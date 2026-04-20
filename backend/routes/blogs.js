@@ -100,7 +100,7 @@ router.post("/scraped", createScrapedBlog);
 router.get("/admin/scraped", authMiddleware, getScrapedBlogs);
 
 // 🔐 Publish scraped blog
-router.put("/publish/:id", authMiddleware, publishScrapedBlog);
+router.put("/admin/publish/:id", authMiddleware, publishScrapedBlog);
 
 // ================= MANUAL BLOG ROUTES ================= //
 
