@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import AdminSidebar from '../admin/AdminSidebar';
-import { blogApi, CATEGORIES } from '../../lib/api.js';
+import { blogApi, CATEGORIES } from '../../lib/api';
 import toast from 'react-hot-toast';
 
 const ReactQuill = dynamic(() => import('react-quill'), {

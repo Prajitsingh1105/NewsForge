@@ -11,7 +11,7 @@ import Navbar from '../../../components/layout/Navbar';
 import Footer from '../../../components/layout/Footer';
 import BlogCard from '../../../components/blog/BlogCard';
 import { BlogPageSkeleton } from '../../../components/ui/Skeletons';
-import { blogApi, CATEGORY_COLORS, getImageUrl } from '../../../lib/api.js';
+import { blogApi, CATEGORY_COLORS, getImageUrl } from '../../../lib/api';
 import toast from 'react-hot-toast';
 
 export default function BlogDetailPage() {

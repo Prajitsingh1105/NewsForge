@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Zap, Lock, User, ArrowRight, Shield } from 'lucide-react';
 import Cookies from 'js-cookie';
-import { authApi } from '../../lib/api.js';
+import { authApi } from '../../../lib/api';
 import toast from 'react-hot-toast';
 
 export default function AdminLoginPage() {
