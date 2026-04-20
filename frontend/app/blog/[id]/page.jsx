@@ -7,11 +7,11 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Clock, Eye, ArrowLeft, Twitter, Linkedin, Link2, BookOpen, Tag, ChevronRight } from 'lucide-react';
 import DOMPurify from 'dompurify';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
-import BlogCard from '@/components/blog/BlogCard';
-import { BlogPageSkeleton } from '@/components/ui/Skeletons';
-import { blogApi, CATEGORY_COLORS, getImageUrl } from '@/lib/api';
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
+import BlogCard from '../components/blog/BlogCard';
+import { BlogPageSkeleton } from '../components/ui/Skeletons';
+import { blogApi, CATEGORY_COLORS, getImageUrl } from '../../../lib/api.js';
 import toast from 'react-hot-toast';
 
 export default function BlogDetailPage() {
