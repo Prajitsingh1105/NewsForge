@@ -19,6 +19,7 @@ export default function AdminSidebar() {
   const navItems = [
     { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/admin/create', icon: FilePlus, label: 'New Post' },
+    { href: '/admin/scraped', icon: Bot, label: 'Scraped News' },
   ];
 
   return (
