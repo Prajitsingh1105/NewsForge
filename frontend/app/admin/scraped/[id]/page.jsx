@@ -96,25 +96,25 @@ Return ONLY the JSON object, no other text.`;
       // Clean the response
       let cleanResponse = aiResponse.trim();
       cleanResponse = cleanResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      
+
       // Parse the JSON response with better error handling
       let parsed;
       try {
         // Find the complete JSON object
         const startIdx = cleanResponse.indexOf('{');
         const endIdx = cleanResponse.lastIndexOf('}') + 1;
-        
+
         if (startIdx !== -1 && endIdx > startIdx) {
           cleanResponse = cleanResponse.substring(startIdx, endIdx);
         }
-        
+
         parsed = JSON.parse(cleanResponse);
       } catch (e) {
         console.error('JSON Parse error, using regex fallback');
         // Fallback: extract title and content using regex
         const titleMatch = aiResponse.match(/"title":\s*"([^"]+)"/);
         const contentMatch = aiResponse.match(/"content":\s*"([^"]+)/);
-        
+
         parsed = {
           title: titleMatch ? titleMatch[1] : blog.title,
           content: contentMatch ? contentMatch[1] : blog.summary
@@ -411,7 +411,9 @@ Return ONLY the JSON object, no other text.`;
             Title: {editedTitle.length} chars | Content: {editedContent.length} chars (~{Math.round(editedContent.length / 5)} words)
           </div>
 
-          <div className="p-6 bg-[var(--bg-secondary)] border-t border-[var(--border)] flex gap-3">
+          <div<div className="p-6 bg-[var(--bg-secondary)] border-t border-[var(--border)] flex gap-3">
+
+            {/* Publish */}
             <button
               onClick={handlePublish}
               disabled={publishing || !editedTitle.trim() || !editedContent.trim()}
@@ -430,12 +432,28 @@ Return ONLY the JSON object, no other text.`;
               )}
             </button>
 
+            {/* ✅ NEW: Edit Now button */}
+            {!isEditing && (
+              <button
+                onClick={() => {
+                  setIsEditing(true);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition-colors"
+              >
+                <Edit3 size={18} />
+                Edit Now
+              </button>
+            )}
+
+            {/* View Source */}
             <Link href={blog.link || '#'} target="_blank" className="flex-1">
               <button className="w-full flex items-center justify-center gap-2 bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-primary)] font-semibold py-3 rounded-xl hover:bg-[var(--bg-hover)] transition-colors">
                 <ExternalLink size={18} />
                 Read Original
               </button>
             </Link>
+
           </div>
         </div>
       </div>
