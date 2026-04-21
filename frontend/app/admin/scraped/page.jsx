@@ -23,7 +23,7 @@ import {
   LayoutPanelTop,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { blogApi, CATEGORY_COLORS, getImageUrl } from '../../../../lib/api';
+import { blogApi, CATEGORY_COLORS, getImageUrl } from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { GoogleGenAI } from '@google/genai';
 
