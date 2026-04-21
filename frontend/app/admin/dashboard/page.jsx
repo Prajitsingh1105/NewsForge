@@ -10,13 +10,15 @@ import {
   Pencil,
   Trash2,
   Eye,
-  TrendingUp,
+  Search,
+  AlertTriangle,
+  LogOut,
   FileText,
   Star,
   BarChart2,
-  Search,
-  AlertTriangle,
-  LogOut
+  TrendingUp,
+  Sparkles,
+  CalendarDays,
 } from 'lucide-react';
 import AdminSidebar from '../../../components/admin/AdminSidebar';
 import { blogApi, CATEGORY_COLORS, getImageUrl } from '../../../lib/api';
@@ -78,10 +80,38 @@ export default function AdminDashboard() {
   );
 
   const statCards = [
-    { label: 'Total Posts', value: stats?.total || 0, icon: FileText, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { label: 'Featured', value: stats?.featured || 0, icon: Star, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    { label: 'Total Views', value: (stats?.totalViews || 0).toLocaleString(), icon: Eye, color: 'text-green-400', bg: 'bg-green-500/10' },
-    { label: 'Categories', value: stats?.byCategory?.length || 0, icon: BarChart2, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    {
+      label: 'Total Posts',
+      value: stats?.total || 0,
+      icon: FileText,
+      tone: 'text-blue-400',
+      bg: 'bg-blue-500/10',
+      border: 'border-blue-500/20',
+    },
+    {
+      label: 'Featured',
+      value: stats?.featured || 0,
+      icon: Star,
+      tone: 'text-amber-400',
+      bg: 'bg-amber-500/10',
+      border: 'border-amber-500/20',
+    },
+    {
+      label: 'Total Views',
+      value: (stats?.totalViews || 0).toLocaleString(),
+      icon: Eye,
+      tone: 'text-emerald-400',
+      bg: 'bg-emerald-500/10',
+      border: 'border-emerald-500/20',
+    },
+    {
+      label: 'Categories',
+      value: stats?.byCategory?.length || 0,
+      icon: BarChart2,
+      tone: 'text-purple-400',
+      bg: 'bg-purple-500/10',
+      border: 'border-purple-500/20',
+    },
   ];
 
   return (
@@ -89,171 +119,220 @@ export default function AdminDashboard() {
       <AdminSidebar />
 
       <div className="flex-1 overflow-auto">
-        <div className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg-primary)]/80 px-6 py-4 backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h1 className="font-display text-2xl font-bold text-[var(--text-primary)]">
-                Dashboard
-              </h1>
-              <p className="text-sm text-[var(--text-muted)]">
-                Manage your news platform
-              </p>
-            </div>
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
+              <div className="border-b border-[var(--border)] p-6">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0">
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-[var(--border)] bg-[var(--bg-secondary)] px-2.5 py-1 text-xs font-medium text-[var(--text-muted)]">
+                        Admin Panel
+                      </span>
+                      <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-400">
+                        Content Workspace
+                      </span>
+                    </div>
 
-            <div className="flex items-center gap-3">
-              <Link href="/admin/create">
-                <motion.button
-                  className="flex items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-hover)]"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <FilePlus size={16} />
-                  New Post
-                </motion.button>
-              </Link>
+                    <h1 className="text-2xl font-bold text-[var(--text-primary)] sm:text-3xl">
+                      Manage Published Posts
+                    </h1>
 
-              <button
-                onClick={logout}
-                className="rounded-xl p-2.5 text-red-400 transition-colors hover:bg-red-500/10 lg:hidden"
-              >
-                <LogOut size={18} />
-              </button>
-            </div>
-          </div>
-        </div>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
+                      Review, search, edit, and maintain your published articles from one clean workspace.
+                    </p>
+                  </div>
 
-        <div className="space-y-8 p-6">
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {statCards.map(({ label, value, icon: Icon, color, bg }, i) => (
-              <motion.div
-                key={label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
-              >
-                <div className={`mb-3 flex h-11 w-11 items-center justify-center rounded-xl ${bg}`}>
-                  <Icon size={18} className={color} />
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Link
+                      href="/admin/create"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-hover)]"
+                    >
+                      <FilePlus size={16} />
+                      <span>Create New Post</span>
+                    </Link>
+
+                    <button
+                      onClick={logout}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/15"
+                    >
+                      <LogOut size={16} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
                 </div>
-                <div className="text-2xl font-bold text-[var(--text-primary)]">
-                  {loading ? '—' : value}
-                </div>
-                <div className="mt-0.5 text-sm text-[var(--text-muted)]">{label}</div>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-[var(--border)] p-5 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-2">
-                <TrendingUp size={17} className="text-[var(--accent)]" />
-                <h2 className="font-semibold text-[var(--text-primary)]">All Posts</h2>
-                <span className="rounded-full bg-[var(--bg-secondary)] px-2 py-0.5 text-xs text-[var(--text-muted)]">
-                  {filtered.length}
-                </span>
               </div>
 
-              <div className="relative w-full md:w-64">
-                <Search
-                  size={15}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
-                />
-                <input
-                  type="text"
-                  placeholder="Search posts..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] py-2.5 pl-9 pr-4 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
-                />
+              <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-6">
+                {statCards.map(({ label, value, icon: Icon, tone, bg, border }, i) => (
+                  <motion.div
+                    key={label}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                    className={`rounded-xl border ${border} bg-[var(--bg-primary)] p-4`}
+                  >
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${bg}`}>
+                        <Icon size={17} className={tone} />
+                      </div>
+                      <span className="text-xs text-[var(--text-muted)]">{label}</span>
+                    </div>
+
+                    <div className="text-xl font-bold text-[var(--text-primary)] sm:text-2xl">
+                      {loading ? '—' : value}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
+            <div className="border-b border-[var(--border)] p-5 sm:p-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">
+                  <div className="mb-2 flex items-center gap-2">
+                    <TrendingUp size={17} className="text-[var(--accent)]" />
+                    <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+                      All Posts
+                    </h2>
+                    <span className="rounded-full border border-[var(--border)] bg-[var(--bg-secondary)] px-2 py-0.5 text-xs text-[var(--text-muted)]">
+                      {filtered.length}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Browse your latest content, open live posts, edit details, or remove outdated entries.
+                  </p>
+                </div>
+
+                <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+                  <div className="relative w-full sm:w-80">
+                    <Search
+                      size={16}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search by title or category..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] py-3 pl-10 pr-4 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
             {loading ? (
-              <div className="space-y-3 p-5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="skeleton h-16 rounded-xl" />
+              <div className="space-y-4 p-5 sm:p-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-28 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)]"
+                  />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="py-16 text-center">
-                <FileText size={40} className="mx-auto mb-3 text-[var(--text-muted)] opacity-40" />
-                <p className="text-[var(--text-muted)]">No posts found</p>
+              <div className="px-6 py-20 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--bg-secondary)]">
+                  <FileText size={28} className="text-[var(--text-muted)] opacity-60" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
+                  No posts found
+                </h3>
+                <p className="mx-auto max-w-md text-sm text-[var(--text-muted)]">
+                  Try changing your search term or create a new article to populate this workspace.
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-[var(--border)]">
                 {filtered.map((blog, i) => (
                   <motion.div
                     key={blog._id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
-                    className="group flex items-center gap-4 p-4 transition-colors hover:bg-[var(--bg-secondary)]"
+                    className="group p-5 transition-colors hover:bg-[var(--bg-secondary)]/60 sm:p-6"
                   >
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl">
-                      <Image
-                        src={getImageUrl(blog.image)}
-                        alt={blog.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1 flex items-center gap-2">
-                        <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${CATEGORY_COLORS[blog.category] || ''}`}>
-                          {blog.category}
-                        </span>
-                        {blog.featured && (
-                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-400">
-                            ★ Featured
-                          </span>
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+                      <div className="relative h-44 w-full overflow-hidden rounded-2xl bg-[var(--bg-secondary)] sm:h-52 lg:h-28 lg:w-44 lg:shrink-0">
+                        {blog.image ? (
+                          <Image
+                            src={getImageUrl(blog.image)}
+                            alt={blog.title}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <FileText size={28} className="text-[var(--text-muted)] opacity-40" />
+                          </div>
                         )}
                       </div>
 
-                      <h3 className="line-clamp-1 text-sm font-semibold text-[var(--text-primary)]">
-                        {blog.title}
-                      </h3>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-3 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                              CATEGORY_COLORS[blog.category] || CATEGORY_COLORS.World
+                            }`}
+                          >
+                            {blog.category}
+                          </span>
 
-                      <div className="mt-0.5 flex items-center gap-3 text-xs text-[var(--text-muted)]">
-                        <span className="flex items-center gap-1">
-                          <Eye size={11} />
-                          {blog.views?.toLocaleString()}
-                        </span>
-                        <span>
-                          {formatDistanceToNow(new Date(blog.createdAt), { addSuffix: true })}
-                        </span>
+                          {blog.featured && (
+                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-400">
+                              <span className="inline-flex items-center gap-1">
+                                <Sparkles size={12} />
+                                Featured
+                              </span>
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="line-clamp-2 text-lg font-semibold leading-7 text-[var(--text-primary)]">
+                          {blog.title}
+                        </h3>
+
+                        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-muted)]">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Eye size={14} />
+                            {blog.views?.toLocaleString() || 0} views
+                          </span>
+
+                          <span className="inline-flex items-center gap-1.5">
+                            <CalendarDays size={14} />
+                            {formatDistanceToNow(new Date(blog.createdAt), { addSuffix: true })}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Link href={`/blog/${blog._id}`} target="_blank" rel="noopener noreferrer">
-                        <motion.button
-                          className="rounded-lg p-2 text-[var(--text-muted)] transition-colors hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
+                      <div className="flex items-center gap-2 lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100">
+                        <Link
+                          href={`/blog/${blog._id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-muted)] transition-colors hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
                         >
-                          <Eye size={15} />
-                        </motion.button>
-                      </Link>
+                          <Eye size={16} />
+                        </Link>
 
-                      <Link href={`/admin/edit/${blog._id}`}>
-                        <motion.button
-                          className="rounded-lg p-2 text-[var(--text-muted)] transition-colors hover:bg-blue-500/10 hover:text-blue-400"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
+                        <Link
+                          href={`/admin/edit/${blog._id}`}
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-muted)] transition-colors hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-400"
                         >
-                          <Pencil size={15} />
-                        </motion.button>
-                      </Link>
+                          <Pencil size={16} />
+                        </Link>
 
-                      <motion.button
-                        onClick={() => setDeleteId(blog._id)}
-                        className="rounded-lg p-2 text-[var(--text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-400"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <Trash2 size={15} />
-                      </motion.button>
+                        <button
+                          onClick={() => setDeleteId(blog._id)}
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-muted)] transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 ))}
@@ -273,29 +352,29 @@ export default function AdminDashboard() {
             onClick={() => !deleting && setDeleteId(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              exit={{ scale: 0.96, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-7 shadow-2xl"
+              className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-2xl"
             >
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10">
                 <AlertTriangle size={22} className="text-red-400" />
               </div>
 
-              <h3 className="mb-2 font-display text-xl font-bold text-[var(--text-primary)]">
+              <h3 className="mb-2 text-xl font-bold text-[var(--text-primary)]">
                 Delete Post?
               </h3>
 
-              <p className="mb-6 text-sm text-[var(--text-muted)]">
-                This action cannot be undone. The post will be permanently removed.
+              <p className="mb-6 text-sm leading-6 text-[var(--text-muted)]">
+                This action cannot be undone. The selected post will be permanently removed from your platform.
               </p>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteId(null)}
                   disabled={deleting}
-                  className="flex-1 rounded-xl border border-[var(--border)] py-2.5 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-secondary)] disabled:opacity-50"
+                  className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--bg-primary)] py-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-secondary)] disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -303,7 +382,7 @@ export default function AdminDashboard() {
                 <button
                   onClick={() => handleDelete(deleteId)}
                   disabled={deleting}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-50"
                 >
                   {deleting && (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
