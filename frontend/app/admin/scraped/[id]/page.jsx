@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Calendar, Globe, Tag, CheckCircle, ExternalLink, Sparkles, Loader2, Edit2, X } from 'lucide-react';
+import { ArrowLeft, Calendar, Globe, Tag, CheckCircle, ExternalLink, Sparkles, Loader2, Edit2, X, Edit3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { blogApi, CATEGORY_COLORS, getImageUrl } from '../../../../lib/api';
 import toast from 'react-hot-toast';
@@ -49,15 +49,21 @@ export default function ScrapedDetailPage() {
     }
   };
 
+  // Quick Edit Mode - Opens everything in edit mode instantly
+  const handleQuickEdit = () => {
+    setIsEditing(true);
+    toast.success('Edit mode activated! Review and publish directly.');
+  };
+
   // AI Rewrite Function using Gemini 3 API
-const handleAIRewrite = async () => {
-  if (!blog) return;
+  const handleAIRewrite = async () => {
+    if (!blog) return;
 
-  setRewriting(true);
-  setShowAIPanel(true);
+    setRewriting(true);
+    setShowAIPanel(true);
 
-  try {
-    const prompt = `You are a professional news editor. Rewrite the following news article to make it more engaging, professional, and SEO-friendly. Keep the same key facts but improve the language, flow, and readability.
+    try {
+      const prompt = `You are a professional news editor. Rewrite the following news article to make it more engaging, professional, and SEO-friendly. Keep the same key facts but improve the language, flow, and readability.
 
 Original Title: ${blog.title}
 Original Content: ${blog.summary || blog.title}
@@ -70,65 +76,65 @@ Make sure the content is factual, neutral, and professional.
 
 Return ONLY the JSON object, no other text.`;
 
-    // Using the new Gemini 3 SDK structure
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{
-        parts: [{ text: prompt }]
-      }],
-      config: {
-        temperature: 0.7,
-        maxOutputTokens: 2048,
-        responseMimeType: "application/json",
-      }
-    });
+      // Using the new Gemini 3 SDK structure
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        config: {
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+          responseMimeType: "application/json",
+        }
+      });
 
-    // New SDK returns response.text directly
-    let aiResponse = response.text;
-    console.log('AI Response:', aiResponse);
+      // New SDK returns response.text directly
+      let aiResponse = response.text;
+      console.log('AI Response:', aiResponse);
 
-    // Clean the response
-    let cleanResponse = aiResponse.trim();
-    cleanResponse = cleanResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-    
-    // Parse the JSON response with better error handling
-    let parsed;
-    try {
-      // Find the complete JSON object
-      const startIdx = cleanResponse.indexOf('{');
-      const endIdx = cleanResponse.lastIndexOf('}') + 1;
+      // Clean the response
+      let cleanResponse = aiResponse.trim();
+      cleanResponse = cleanResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
       
-      if (startIdx !== -1 && endIdx > startIdx) {
-        cleanResponse = cleanResponse.substring(startIdx, endIdx);
+      // Parse the JSON response with better error handling
+      let parsed;
+      try {
+        // Find the complete JSON object
+        const startIdx = cleanResponse.indexOf('{');
+        const endIdx = cleanResponse.lastIndexOf('}') + 1;
+        
+        if (startIdx !== -1 && endIdx > startIdx) {
+          cleanResponse = cleanResponse.substring(startIdx, endIdx);
+        }
+        
+        parsed = JSON.parse(cleanResponse);
+      } catch (e) {
+        console.error('JSON Parse error, using regex fallback');
+        // Fallback: extract title and content using regex
+        const titleMatch = aiResponse.match(/"title":\s*"([^"]+)"/);
+        const contentMatch = aiResponse.match(/"content":\s*"([^"]+)/);
+        
+        parsed = {
+          title: titleMatch ? titleMatch[1] : blog.title,
+          content: contentMatch ? contentMatch[1] : blog.summary
+        };
       }
-      
-      parsed = JSON.parse(cleanResponse);
-    } catch (e) {
-      console.error('JSON Parse error, using regex fallback');
-      // Fallback: extract title and content using regex
-      const titleMatch = aiResponse.match(/"title":\s*"([^"]+)"/);
-      const contentMatch = aiResponse.match(/"content":\s*"([^"]+)/);
-      
-      parsed = {
-        title: titleMatch ? titleMatch[1] : blog.title,
-        content: contentMatch ? contentMatch[1] : blog.summary
-      };
+
+      setAiSuggestion({
+        title: parsed.title || blog.title,
+        content: parsed.content || blog.summary
+      });
+
+      toast.success('AI suggestions ready! Review them below.');
+    } catch (error) {
+      console.error('AI Rewrite error:', error);
+      toast.error(`Failed to rewrite content: ${error.message}`);
+      setShowAIPanel(false);
+    } finally {
+      setRewriting(false);
     }
-
-    setAiSuggestion({
-      title: parsed.title || blog.title,
-      content: parsed.content || blog.summary
-    });
-
-    toast.success('AI suggestions ready! Review them below.');
-  } catch (error) {
-    console.error('AI Rewrite error:', error);
-    toast.error(`Failed to rewrite content: ${error.message}`);
-    setShowAIPanel(false);
-  } finally {
-    setRewriting(false);
-  }
-};
+  };
 
   // Apply AI suggestions
   const applyAISuggestions = () => {
@@ -282,23 +288,36 @@ Return ONLY the JSON object, no other text.`;
                 </span>
               </div>
 
-              <button
-                onClick={handleAIRewrite}
-                disabled={rewriting}
-                className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 hover:from-purple-500/30 hover:to-blue-500/30 border border-purple-500/30 rounded-lg transition-all text-sm"
-              >
-                {rewriting ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    <span>AI is thinking...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={14} className="text-purple-400" />
-                    <span>Enhance with AI</span>
-                  </>
-                )}
-              </button>
+              {/* Action Buttons - Updated with Quick Edit button */}
+              <div className="flex items-center gap-2">
+                {/* Quick Edit Button - NEW */}
+                <button
+                  onClick={handleQuickEdit}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 hover:from-emerald-500/30 hover:to-emerald-600/30 border border-emerald-500/30 rounded-lg transition-all text-sm font-medium group"
+                >
+                  <Edit3 size={14} className="group-hover:scale-110 transition-transform" />
+                  <span>Quick Edit</span>
+                </button>
+
+                {/* AI Enhance Button */}
+                <button
+                  onClick={handleAIRewrite}
+                  disabled={rewriting}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 hover:from-purple-500/30 hover:to-blue-500/30 border border-purple-500/30 rounded-lg transition-all text-sm"
+                >
+                  {rewriting ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>AI is thinking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={14} className="text-purple-400" />
+                      <span>Enhance with AI</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="mb-4">
