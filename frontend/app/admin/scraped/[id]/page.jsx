@@ -412,7 +412,6 @@ Return ONLY the JSON object, no other text.`;
           </div>
 
           <div className="p-6 bg-[var(--bg-secondary)] border-t border-[var(--border)] flex gap-3">
-
             {/* Publish */}
             <button
               onClick={handlePublish}
@@ -432,19 +431,18 @@ Return ONLY the JSON object, no other text.`;
               )}
             </button>
 
-            {/* ✅ NEW: Edit Now button */}
-            {!isEditing && (
-              <button
-                onClick={() => {
-                  setIsEditing(true);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition-colors"
-              >
-                <Edit3 size={18} />
-                Edit Now
-              </button>
-            )}
+            {/* ✅ FIXED: Edit Now button - Always visible */}
+            <button
+              onClick={() => {
+                setIsEditing(true);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition-colors"
+              disabled={isEditing} // Disable when already editing
+            >
+              <Edit3 size={18} />
+              <span>{isEditing ? 'In Edit Mode' : 'Edit Now'}</span>
+            </button>
 
             {/* View Source */}
             <Link href={blog.link || '#'} target="_blank" className="flex-1">
@@ -453,7 +451,6 @@ Return ONLY the JSON object, no other text.`;
                 Read Original
               </button>
             </Link>
-
           </div>
         </div>
       </div>
