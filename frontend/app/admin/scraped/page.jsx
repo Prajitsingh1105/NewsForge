@@ -17,7 +17,6 @@ import {
   Edit3,
   FileText,
   Wand2,
-  Save,
   PenSquare,
   Eye,
   LayoutPanelTop,
@@ -32,8 +31,10 @@ const ai = new GoogleGenAI({
 });
 
 export default function ScrapedDetailPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const router = useRouter();
+
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
@@ -46,15 +47,23 @@ export default function ScrapedDetailPage() {
   const [aiSuggestion, setAiSuggestion] = useState({ title: '', content: '' });
 
   useEffect(() => {
+    if (!id) return;
     fetchBlog();
   }, [id]);
 
   const fetchBlog = async () => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
     try {
+      setLoading(true);
       const res = await blogApi.getScrapedById(id);
       const blogData = res.data.blog || res.data;
+
       setBlog(blogData);
-      setEditedTitle(blogData.title);
+      setEditedTitle(blogData.title || '');
       setEditedContent(blogData.summary || '');
     } catch (err) {
       console.error(err);
