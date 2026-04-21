@@ -411,7 +411,7 @@ Return ONLY the JSON object, no other text.`;
             Title: {editedTitle.length} chars | Content: {editedContent.length} chars (~{Math.round(editedContent.length / 5)} words)
           </div>
 
-          <div<div className="p-6 bg-[var(--bg-secondary)] border-t border-[var(--border)] flex gap-3">
+          <div className="p-6 bg-[var(--bg-secondary)] border-t border-[var(--border)] flex gap-3">
 
             {/* Publish */}
             <button
