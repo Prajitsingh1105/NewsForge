@@ -436,6 +436,7 @@ Return ONLY the JSON object, no other text.`;
               onClick={() => {
                 setIsEditing(true);
                 toast.success('Edit mode activated!');
+                console.log("Is Editing:", isEditing);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
