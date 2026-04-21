@@ -432,14 +432,14 @@ Return ONLY the JSON object, no other text.`;
             </button>
 
             {/* 2. EDIT NOW BUTTON - ALWAYS VISIBLE */}
+            {/* Change this in your bottom action bar */}
             <button
               onClick={() => {
                 setIsEditing(true);
                 toast.success('Edit mode activated!');
-                console.log("Is Editing:", isEditing);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg"
             >
               <Edit3 size={18} />
               <span>Edit Now</span>
