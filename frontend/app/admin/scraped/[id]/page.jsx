@@ -412,7 +412,7 @@ Return ONLY the JSON object, no other text.`;
           </div>
 
           <div className="p-6 bg-[var(--bg-secondary)] border-t border-[var(--border)] flex gap-3">
-            {/* Publish */}
+            {/* 1. Publish Button */}
             <button
               onClick={handlePublish}
               disabled={publishing || !editedTitle.trim() || !editedContent.trim()}
@@ -431,20 +431,20 @@ Return ONLY the JSON object, no other text.`;
               )}
             </button>
 
-            {/* ✅ FIXED: Edit Now button - Always visible */}
+            {/* 2. EDIT NOW BUTTON - ALWAYS VISIBLE */}
             <button
               onClick={() => {
                 setIsEditing(true);
+                toast.success('Edit mode activated!');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition-colors"
-              disabled={isEditing} // Disable when already editing
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
             >
               <Edit3 size={18} />
-              <span>{isEditing ? 'In Edit Mode' : 'Edit Now'}</span>
+              <span>Edit Now</span>
             </button>
 
-            {/* View Source */}
+            {/* 3. Read Original */}
             <Link href={blog.link || '#'} target="_blank" className="flex-1">
               <button className="w-full flex items-center justify-center gap-2 bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-primary)] font-semibold py-3 rounded-xl hover:bg-[var(--bg-hover)] transition-colors">
                 <ExternalLink size={18} />
