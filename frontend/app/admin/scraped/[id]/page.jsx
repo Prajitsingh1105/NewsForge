@@ -411,47 +411,43 @@ Return ONLY the JSON object, no other text.`;
             Title: {editedTitle.length} chars | Content: {editedContent.length} chars (~{Math.round(editedContent.length / 5)} words)
           </div>
 
-          <div className="p-6 bg-[var(--bg-secondary)] border-t border-[var(--border)] flex gap-3">
+          {/* Replace the bottom div (approx line 340) with this */}
+          <div className="sticky bottom-0 z-50 p-6 bg-slate-900 border-t border-gray-700 flex flex-wrap md:flex-nowrap gap-3 shadow-[0_-10px_20px_rgba(0,0,0,0.3)]">
+
             {/* 1. Publish Button */}
             <button
               onClick={handlePublish}
               disabled={publishing || !editedTitle.trim() || !editedContent.trim()}
-              className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50"
             >
-              {publishing ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  <span>Publishing...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle size={18} />
-                  <span>Publish to Website</span>
-                </>
-              )}
+              {publishing ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
+              <span>{publishing ? 'Publishing...' : 'Publish to Website'}</span>
             </button>
 
-            {/* 2. EDIT NOW BUTTON - ALWAYS VISIBLE */}
-            {/* Change this in your bottom action bar */}
+            {/* 2. EDIT NOW BUTTON - HIGHLIGHTED */}
             <button
               onClick={() => {
                 setIsEditing(true);
                 toast.success('Edit mode activated!');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg"
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all border-2 border-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.4)]"
             >
               <Edit3 size={18} />
               <span>Edit Now</span>
             </button>
 
             {/* 3. Read Original */}
-            <Link href={blog.link || '#'} target="_blank" className="flex-1">
-              <button className="w-full flex items-center justify-center gap-2 bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-primary)] font-semibold py-3 rounded-xl hover:bg-[var(--bg-hover)] transition-colors">
+            {blog.link && (
+              <a
+                href={blog.link}
+                target="_blank"
+                className="flex-1 flex items-center justify-center gap-2 bg-gray-800 border border-gray-600 text-white font-semibold py-3 rounded-xl hover:bg-gray-700 transition-colors"
+              >
                 <ExternalLink size={18} />
                 Read Original
-              </button>
-            </Link>
+              </a>
+            )}
           </div>
         </div>
       </div>
