@@ -1,9 +1,10 @@
 'use client';
+
 import { useState, useEffect, useCallback, Suspense, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { TrendingUp, Clock, ArrowRight, Flame, Zap } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -57,6 +58,7 @@ function SafeHeroImage({ blog }) {
 function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
 
   const [blogs, setBlogs] = useState([]);
   const [featured, setFeatured] = useState(null);
@@ -67,6 +69,22 @@ function HomeContent() {
   const [search] = useState(searchParams.get('search') || '');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+
+  const fadeUp = shouldReduceMotion
+    ? {}
+    : {
+        initial: { opacity: 0, y: 18 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: 10 },
+      };
+
+  const fadeOnly = shouldReduceMotion
+    ? {}
+    : {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+      };
 
   const fetchBlogs = useCallback(async (cat, pg, reset = false) => {
     if (pg === 1) setLoading(true);
@@ -143,6 +161,11 @@ function HomeContent() {
       ? blogs.filter((b) => b._id !== featured._id)
       : blogs;
 
+  const supportingStories =
+    featured && category === 'All' && !search
+      ? blogs.filter((b) => b._id !== featured._id).slice(0, 2)
+      : [];
+
   return (
     <>
       <Navbar />
@@ -152,140 +175,240 @@ function HomeContent() {
           {!loading && featured ? (
             <motion.section
               key="hero"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="relative h-[82vh] min-h-[540px] overflow-hidden"
+              {...fadeOnly}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.35 }}
+              className="relative overflow-hidden border-b border-[var(--border)] bg-[var(--bg-primary)]"
             >
-              <SafeHeroImage blog={featured} />
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+                  <motion.article
+                    {...fadeUp}
+                    transition={{ duration: shouldReduceMotion ? 0 : 0.45 }}
+                    className="lg:col-span-8 group"
+                  >
+                    <Link href={`/blog/${featured._id}`} className="block">
+                      <div className="relative min-h-[420px] sm:min-h-[480px] lg:min-h-[540px] overflow-hidden rounded-[28px] bg-[var(--bg-secondary)] border border-white/10">
+                        <SafeHeroImage blog={featured} />
 
-              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/82 via-black/56 to-black/22" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/20 to-transparent" />
 
-              <motion.div
-                className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-[var(--accent)]/20 blur-[120px]"
-                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                transition={{ repeat: Infinity, duration: 6 }}
-              />
+                        <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 lg:p-8">
+                          <div className="flex flex-wrap items-center gap-2 mb-4">
+                            <span className="inline-flex items-center gap-1.5 bg-[var(--accent)] text-white text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-[0.18em]">
+                              <Flame size={12} />
+                              Featured
+                            </span>
 
-              <div className="absolute inset-0 flex items-center">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                  <div className="max-w-3xl">
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="flex items-center gap-2 mb-6 flex-wrap"
-                    >
-                      <span className="flex items-center gap-1.5 bg-[var(--accent)] text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
-                        <Flame size={12} />
-                        Featured Story
-                      </span>
+                            <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-white/90">
+                              {featured.category}
+                            </span>
+                          </div>
 
-                      <span className="bg-white/10 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full border border-white/20">
-                        {featured.category}
-                      </span>
-                    </motion.div>
+                          <h1 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-white leading-[1.05] max-w-4xl mb-4">
+                            {featured.title}
+                          </h1>
 
-                    <motion.h1
-                      initial={{ opacity: 0, y: 30 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3, duration: 0.7 }}
-                      className="font-display font-black text-4xl md:text-6xl text-white leading-tight mb-6"
-                    >
-                      {featured.title}
-                    </motion.h1>
+                          <p className="text-white/78 text-sm sm:text-base lg:text-lg leading-relaxed line-clamp-3 max-w-2xl mb-6">
+                            {featured.excerpt}
+                          </p>
 
-                    <motion.p
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.45 }}
-                      className="text-white/80 text-lg md:text-xl mb-8 line-clamp-3 max-w-2xl"
-                    >
-                      {featured.excerpt}
-                    </motion.p>
+                          <div className="flex flex-wrap items-center gap-4 sm:gap-5">
+                            <span className="inline-flex items-center gap-2 rounded-full bg-white text-[var(--text-primary)] px-5 py-3 text-sm font-semibold transition-transform duration-200 group-hover:translate-x-1">
+                              Read Full Story
+                              <ArrowRight size={16} />
+                            </span>
 
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.55 }}
-                      className="flex flex-wrap items-center gap-4"
-                    >
-                      <Link href={`/blog/${featured._id}`}>
-                        <motion.button
-                          className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold px-6 py-3 rounded-full transition-colors duration-200"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.97 }}
-                        >
-                          Read Full Story <ArrowRight size={16} />
-                        </motion.button>
-                      </Link>
+                            <div className="flex flex-wrap items-center gap-3 text-white/65 text-sm">
+                              <span className="inline-flex items-center gap-1.5">
+                                <Clock size={14} />
+                                {featured.readTime || 5} min read
+                              </span>
+                              <span className="hidden sm:inline">·</span>
+                              <span>
+                                {formatDistanceToNow(new Date(featured.createdAt), { addSuffix: true })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.article>
 
-                      <div className="flex items-center gap-3 text-white/60 text-sm">
-                        <Clock size={14} />
-                        <span>{featured.readTime || 5} min read</span>
-                        <span>·</span>
-                        <span>
-                          {formatDistanceToNow(new Date(featured.createdAt), { addSuffix: true })}
+                  <motion.aside
+                    {...fadeUp}
+                    transition={{ duration: shouldReduceMotion ? 0 : 0.45, delay: shouldReduceMotion ? 0 : 0.05 }}
+                    className="lg:col-span-4 flex flex-col gap-4"
+                  >
+                    <div className="flex items-center gap-3 px-1">
+                      <div className="flex items-center gap-2 rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/10 px-3 py-1.5">
+                        <Zap size={14} className="text-[var(--accent)]" />
+                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
+                          Top picks
                         </span>
                       </div>
-                    </motion.div>
-                  </div>
+                      <div className="h-px flex-1 bg-[var(--border)]" />
+                    </div>
+
+                    {supportingStories.length > 0 ? (
+                      supportingStories.map((blog, index) => (
+                        <Link
+                          key={blog._id}
+                          href={`/blog/${blog._id}`}
+                          className="group block rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-3 sm:p-4 hover:border-[var(--accent)]/30 hover:bg-[var(--bg-secondary)] transition-all duration-300"
+                        >
+                          <div className="flex gap-4">
+                            <div className="relative h-24 w-28 sm:h-28 sm:w-36 shrink-0 overflow-hidden rounded-2xl bg-[var(--bg-secondary)]">
+                              <Image
+                                src={getImageUrl(blog?.image) || LOCAL_FALLBACK_IMAGE}
+                                alt={blog?.title || 'Story image'}
+                                fill
+                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                sizes="(max-width: 640px) 112px, 144px"
+                                onError={(e) => {
+                                  e.currentTarget.src = LOCAL_FALLBACK_IMAGE;
+                                }}
+                              />
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--accent)]">
+                                  {String(index + 1).padStart(2, '0')}
+                                </span>
+                                <span className="h-1 w-1 rounded-full bg-[var(--text-muted)]" />
+                                <span className="text-[11px] uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                                  {blog.category}
+                                </span>
+                              </div>
+
+                              <h2 className="line-clamp-2 text-[15px] sm:text-base font-semibold leading-snug text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                                {blog.title}
+                              </h2>
+
+                              <p className="mt-2 line-clamp-2 text-sm text-[var(--text-muted)]">
+                                {blog.excerpt}
+                              </p>
+
+                              <div className="mt-3 flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                                <Clock size={12} />
+                                <span>
+                                  {formatDistanceToNow(new Date(blog.createdAt), { addSuffix: true })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="grid gap-4">
+                        {Array.from({ length: 2 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-4"
+                          >
+                            <CardSkeleton />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </motion.aside>
                 </div>
               </div>
-
-              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[var(--bg-primary)] to-transparent" />
             </motion.section>
           ) : loading ? (
             <motion.div
               key="hero-skeleton"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="skeleton h-[82vh] min-h-[540px]"
-            />
+              {...fadeOnly}
+              className="border-b border-[var(--border)]"
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+                  <div className="lg:col-span-8 skeleton rounded-[28px] min-h-[420px] sm:min-h-[480px] lg:min-h-[540px]" />
+                  <div className="lg:col-span-4 grid gap-4">
+                    <div className="skeleton rounded-[24px] min-h-[150px]" />
+                    <div className="skeleton rounded-[24px] min-h-[150px]" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           ) : (
-            <div key="hero-empty" className="h-16" />
+            <div key="hero-empty" className="h-8" />
           )}
         </AnimatePresence>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {trending.length > 0 && (
             <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="py-10"
+              {...fadeUp}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.08 }}
+              className="py-8 sm:py-10"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex items-center gap-2 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-full px-3 py-1.5">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/10 px-3 py-1.5">
                   <TrendingUp size={14} className="text-[var(--accent)]" />
-                  <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider">
-                    Trending
+                  <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
+                    Trending now
                   </span>
                 </div>
                 <div className="h-px flex-1 bg-[var(--border)]" />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 {trending.map((blog, i) => (
-                  <BlogCard key={blog._id} blog={blog} variant="compact" index={i} />
+                  <Link
+                    key={blog._id}
+                    href={`/blog/${blog._id}`}
+                    className="group rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] px-4 py-4 hover:border-[var(--accent)]/30 hover:bg-[var(--bg-secondary)] transition-all duration-300"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="text-lg font-black leading-none text-[var(--accent)]/70">
+                        {String(i + 1).padStart(2, '0')}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-2 flex items-center gap-2">
+                          <span className="text-[11px] uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                            {blog.category}
+                          </span>
+                        </div>
+
+                        <h3 className="line-clamp-3 text-sm sm:text-[15px] font-semibold leading-snug text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                          {blog.title}
+                        </h3>
+
+                        <div className="mt-3 flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                          <Clock size={12} />
+                          <span>
+                            {formatDistanceToNow(new Date(blog.createdAt), { addSuffix: true })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
                 ))}
               </div>
             </motion.section>
           )}
 
-          <section className="pb-20">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex items-center gap-2 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-full px-3 py-1.5">
-                <Zap size={14} className="text-[var(--accent)] fill-[var(--accent)]" />
-                <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider">
-                  Latest
-                </span>
+          <section className="pb-20 pt-2">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/10 px-3 py-1.5">
+                  <Zap size={14} className="text-[var(--accent)] fill-[var(--accent)]" />
+                  <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
+                    Latest
+                  </span>
+                </div>
+
+                <h2 className="font-display font-bold text-2xl sm:text-3xl text-[var(--text-primary)]">
+                  News
+                </h2>
               </div>
 
-              <h2 className="font-display font-bold text-2xl text-[var(--text-primary)]">
-                News
-              </h2>
+              <p className="text-sm text-[var(--text-muted)]">
+                Fresh stories, analysis, and updates across categories.
+              </p>
             </div>
 
             <div className="mb-8">
@@ -296,9 +419,7 @@ function HomeContent() {
               {loading ? (
                 <motion.div
                   key="grid-skeleton"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  {...fadeOnly}
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
                   {Array.from({ length: 6 }).map((_, i) => (
@@ -308,11 +429,10 @@ function HomeContent() {
               ) : displayBlogs.length === 0 ? (
                 <motion.div
                   key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-24"
+                  {...fadeOnly}
+                  className="rounded-[28px] border border-dashed border-[var(--border)] bg-[var(--bg-card)] text-center py-20 px-6"
                 >
-                  <div className="text-6xl mb-4">📭</div>
+                  <div className="mb-4 text-5xl">📭</div>
                   <h3 className="font-display text-2xl text-[var(--text-primary)] mb-2">
                     No stories found
                   </h3>
@@ -323,25 +443,24 @@ function HomeContent() {
               ) : (
                 <motion.div
                   key={`grid-${category}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  {...fadeOnly}
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
                   {displayBlogs.map((blog, i) => (
-                    <BlogCard key={blog._id} blog={blog} variant="default" index={i} />
+                    <BlogCard key={blog._id} blog={blog} variant={i < 2 ? 'feature' : 'default'} index={i} />
                   ))}
                 </motion.div>
               )}
             </AnimatePresence>
 
             {hasMore && !loading && displayBlogs.length > 0 && (
-              <div className="text-center mt-12">
+              <div className="mt-12 text-center">
                 <motion.button
                   onClick={handleLoadMore}
                   disabled={loadingMore}
-                  className="inline-flex items-center gap-2 px-8 py-3 rounded-full border-2 border-[var(--accent)] text-[var(--accent)] font-semibold hover:bg-[var(--accent)] hover:text-white transition-all duration-200 disabled:opacity-50"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--accent)] px-8 py-3 text-[var(--accent)] font-semibold hover:bg-[var(--accent)] hover:text-white transition-all duration-200 disabled:opacity-50"
+                  whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
+                  whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
                 >
                   {loadingMore ? (
                     <>
@@ -350,7 +469,8 @@ function HomeContent() {
                     </>
                   ) : (
                     <>
-                      Load More Stories <ArrowRight size={16} />
+                      Load More Stories
+                      <ArrowRight size={16} />
                     </>
                   )}
                 </motion.button>
