@@ -168,7 +168,7 @@ export default function BlogForm({ blogId }) {
     if (!form.title.trim() || isQuillEmpty(form.content) || aiLoading) {
       return;
     }
-
+    console.log("KEY:", process.env.GEMINI_API_KEY);
     setOriginalForm(form);
     setAiLoading(true);
 
