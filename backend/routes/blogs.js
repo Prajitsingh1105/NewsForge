@@ -91,6 +91,8 @@ router.post(
   createBlog
 );
 
+router.post('/ai-enhance', authMiddleware, enhanceContent);
+
 router.put(
   "/:id",
   authMiddleware,

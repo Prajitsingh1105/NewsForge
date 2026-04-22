@@ -42,38 +42,32 @@ export const blogApi = {
   getAll: (params) => api.get('/blogs', { params }),
   getById: (id) => api.get(`/blogs/${id}`),
 
-  // CREATE
   create: (formData) =>
     api.post('/blogs', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { 'Content-Type': 'multipart/form-data' },
     }),
 
-  // UPDATE
   update: (id, formData) =>
     api.put(`/blogs/${id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { 'Content-Type': 'multipart/form-data' },
     }),
 
   delete: (id) => api.delete(`/blogs/${id}`),
   getStats: () => api.get('/blogs/stats'),
 
-  // SCRAPER APIs
-  getScraped: (page = 1, limit = 20, search = '') => 
-    api.get('/scraped_blogs/scraped', { 
-      params: { page, limit, search } 
-    }),
+  // ✅ ADD THIS
+  enhanceContent: (data) => api.post('/blogs/ai-enhance', data),
+
+  getScraped: (page = 1, limit = 20, search = '') =>
+    api.get('/scraped_blogs/scraped', { params: { page, limit, search } }),
+
   publishScraped: (id) => api.put(`/scraped_blogs/publish/${id}`),
-  deleteScraped: (id) => api.delete(`/scraped_blogs/scraped/${id}`), // ADD THIS
-  getScrapedById: (id) => api.get(`/scraped_blogs/scraped/${id}`), // ADD THIS
+  deleteScraped: (id) => api.delete(`/scraped_blogs/scraped/${id}`),
+  getScrapedById: (id) => api.get(`/scraped_blogs/scraped/${id}`),
+
   publishScrapedWithData: (id, formData) =>
     api.put(`/scraped_blogs/publish/${id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { 'Content-Type': 'multipart/form-data' },
     }),
 };
 

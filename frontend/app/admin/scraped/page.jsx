@@ -316,7 +316,7 @@ export default function ScrapedPage() {
                       {/* Actions - Only View and Delete */}
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
                         {/* View/Preview Button */}
-                        <Link href={`/admin/scraped/${blog._id}`}>
+                        <Link href={`/admin/edit/${blog._id}?from=scraped`}>
                           <button 
                             className="p-2 rounded-lg hover:bg-[var(--accent)]/10 transition-colors"
                             title="View Details"

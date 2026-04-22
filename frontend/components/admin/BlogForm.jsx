@@ -3,7 +3,7 @@
 import 'react-quill/dist/quill.snow.css';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
@@ -18,6 +18,7 @@ import {
   AlignLeft,
   Type,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import AdminSidebar from '../admin/AdminSidebar';
@@ -70,8 +71,10 @@ const isQuillEmpty = (html = '') => getPlainTextFromHtml(html).length === 0;
 
 export default function BlogForm({ blogId }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileRef = useRef(null);
   const isEdit = !!blogId;
+  const isFromScraped = searchParams.get('from') === 'scraped';
 
   const [form, setForm] = useState({
     title: '',
@@ -82,6 +85,7 @@ export default function BlogForm({ blogId }) {
     featured: false,
   });
 
+  const [originalForm, setOriginalForm] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [existingImage, setExistingImage] = useState('');
@@ -89,14 +93,19 @@ export default function BlogForm({ blogId }) {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [activeTab, setActiveTab] = useState('content');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiEnhanced, setAiEnhanced] = useState(false);
 
   useEffect(() => {
     if (!isEdit) return;
 
     const fetchBlog = async () => {
       try {
-        const res = await blogApi.getById(blogId);
-        const b = res.data.blog;
+        const res = isFromScraped
+          ? await blogApi.getScrapedById(blogId)
+          : await blogApi.getById(blogId);
+
+        const b = res.data.blog || res.data;
 
         setForm({
           title: b.title || '',
@@ -118,7 +127,7 @@ export default function BlogForm({ blogId }) {
     };
 
     fetchBlog();
-  }, [blogId, isEdit, router]);
+  }, [blogId, isEdit, router, isFromScraped]);
 
   useEffect(() => {
     return () => {
@@ -154,6 +163,60 @@ export default function BlogForm({ blogId }) {
     if (fileRef.current) {
       fileRef.current.value = '';
     }
+  };
+
+  const handleAiEnhance = async () => {
+    if (!form.title.trim() || isQuillEmpty(form.content) || aiLoading) {
+      return;
+    }
+
+    setOriginalForm(form);
+    setAiLoading(true);
+
+    try {
+      const response = await blogApi.enhanceContent({
+        title: form.title,
+        excerpt: form.excerpt,
+        content: form.content,
+      });
+
+      const data = response?.data;
+
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        toast.error('Invalid AI response. Please try again.');
+        return;
+      }
+
+      const { title, excerpt, content } = data;
+
+      if (!content || isQuillEmpty(content)) {
+        toast.error('AI did not return valid content.');
+        return;
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        title: title || prev.title,
+        excerpt: excerpt || prev.excerpt,
+        content: content || prev.content,
+      }));
+
+      setAiEnhanced(true);
+      toast.success('AI enhancement complete');
+    } catch {
+      toast.error('AI enhancement failed. Please try again.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleUndoAiChanges = () => {
+    if (!originalForm) return;
+
+    setForm(originalForm);
+    setAiEnhanced(false);
+    setOriginalForm(null);
+    toast.success('AI changes reverted');
   };
 
   const handleSubmit = async (e) => {
@@ -217,6 +280,8 @@ export default function BlogForm({ blogId }) {
   const wordCount = plainTextContent
     ? plainTextContent.split(/\s+/).filter(Boolean).length
     : 0;
+  const isAiButtonDisabled =
+    !form.title.trim() || isQuillEmpty(form.content) || aiLoading;
 
   if (loading) {
     return (
@@ -345,9 +410,55 @@ export default function BlogForm({ blogId }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                    Article Content *
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                      Article Content *
+                    </label>
+
+                    <div className="flex items-center gap-2">
+                      {aiEnhanced && originalForm && (
+                        <motion.button
+                          type="button"
+                          onClick={handleUndoAiChanges}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-all"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <X size={12} />
+                          Undo AI Changes
+                        </motion.button>
+                      )}
+
+                      <motion.button
+                        type="button"
+                        onClick={handleAiEnhance}
+                        disabled={isAiButtonDisabled}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          isAiButtonDisabled
+                            ? 'text-[var(--text-muted)] cursor-not-allowed'
+                            : 'text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]/90'
+                        }`}
+                        whileHover={isAiButtonDisabled ? {} : { scale: 1.05 }}
+                        whileTap={isAiButtonDisabled ? {} : { scale: 0.95 }}
+                      >
+                        {aiLoading ? (
+                          <div className="w-3 h-3 border-2 border-[var(--accent)]/30 border-t-[var(--accent)] rounded-full animate-spin" />
+                        ) : (
+                          <Sparkles size={12} />
+                        )}
+                        {aiLoading ? 'Enhancing...' : 'Enhance with AI'}
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  {aiEnhanced && (
+                    <div className="mb-3 p-2 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center gap-2">
+                      <Sparkles size={14} className="text-green-500 flex-shrink-0" />
+                      <span className="text-xs text-green-600 font-medium">
+                        Content enhanced with AI ✨
+                      </span>
+                    </div>
+                  )}
 
                   <div className="blog-editor rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--bg-card)] focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)]/15 transition-all">
                     <ReactQuill
@@ -362,8 +473,9 @@ export default function BlogForm({ blogId }) {
                     />
                   </div>
 
-                  <p className="text-xs text-[var(--text-muted)] mt-2">
-                    Use headings, lists, links, and formatting to structure your post.
+                  <p className="text-xs text-[var(--text-muted)] mt-2 flex items-center gap-1">
+                    <Sparkles size={12} className="opacity-70" />
+                    AI will improve readability, SEO, and structure
                   </p>
                 </div>
               </motion.div>
