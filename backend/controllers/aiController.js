@@ -8,20 +8,40 @@ exports.enhanceContent = async (req, res) => {
       });
     }
 
-    // 🧠 Basic AI logic (can upgrade later)
+    // 🧠 Clean plain text
+    const plainText = content.replace(/<[^>]*>/g, "");
+
+    // 🧠 Split into sentences
+    const sentences = plainText.split(". ").filter(Boolean);
+
+    // 🧠 Build structured content
+    const intro = sentences.slice(0, 2).join(". ") + ".";
+    const body = sentences.slice(2, 6).join(". ") + ".";
+    const ending = sentences.slice(6).join(". ") + ".";
+
     const improvedContent = `
       <h2>${title}</h2>
-      <p>${content}</p>
-      <p><strong>✨ Improved readability, structure, and SEO.</strong></p>
+
+      <p>${intro}</p>
+
+      <h3>Key Details</h3>
+      <p>${body}</p>
+
+      <h3>Conclusion</h3>
+      <p>${ending}</p>
     `;
 
     const improvedExcerpt =
-      excerpt || content.replace(/<[^>]*>/g, "").slice(0, 160);
+      excerpt ||
+      plainText.slice(0, 160) + "...";
 
     res.json({
-      title: title + " 🚀",
-      excerpt: improvedExcerpt,
-      content: improvedContent,
+      success: true,
+      data: {
+        title: title,
+        excerpt: improvedExcerpt,
+        content: improvedContent,
+      },
     });
 
   } catch (error) {
