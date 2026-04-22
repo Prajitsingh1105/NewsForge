@@ -1,11 +1,22 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-console.log("ENV CHECK:", process.env.GEMINI_API_KEY ? "FOUND" : "MISSING");
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// ❌ DO NOT initialize here
 
 exports.enhanceContent = async (req, res) => {
   try {
+    console.log("🔹 AI ROUTE HIT");
+
+    // ✅ ALWAYS read env inside function
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    console.log("🔹 KEY STATUS:", apiKey ? "FOUND" : "MISSING");
+
+    if (!apiKey) {
+      return res.status(500).json({
+        message: "Gemini API key not found in environment",
+      });
+    }
+
     const { title, excerpt, content } = req.body;
 
     if (!title || !content) {
@@ -13,6 +24,9 @@ exports.enhanceContent = async (req, res) => {
         message: "Title and content are required",
       });
     }
+
+    // ✅ Initialize here (FIXED)
+    const genAI = new GoogleGenerativeAI(apiKey);
 
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
@@ -40,22 +54,37 @@ Excerpt: ${excerpt}
 Content: ${content}
 `;
 
+    console.log("🔹 Sending request to Gemini...");
+
     const result = await model.generateContent(prompt);
     const text = result.response.text();
 
-    console.log("RAW AI RESPONSE:", text);
+    console.log("🔹 RAW AI RESPONSE:\n", text);
 
+    // ✅ CLEAN markdown
     let cleanText = text
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
 
-    const parsed = JSON.parse(cleanText);
+    let parsed;
+
+    try {
+      parsed = JSON.parse(cleanText);
+    } catch (err) {
+      console.error("❌ JSON PARSE ERROR:", err);
+      return res.status(500).json({
+        message: "AI returned invalid JSON",
+        raw: cleanText,
+      });
+    }
+
+    console.log("✅ AI SUCCESS");
 
     res.json(parsed);
 
   } catch (error) {
-    console.error("Gemini AI error:", error);
+    console.error("🔥 GEMINI FULL ERROR:", error);
 
     res.status(500).json({
       message: "AI enhancement failed",
