@@ -1,3 +1,5 @@
+const { enhanceContent } = require('../controllers/aiController');
+
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
