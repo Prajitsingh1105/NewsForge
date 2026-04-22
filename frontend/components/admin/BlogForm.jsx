@@ -109,13 +109,12 @@ export default function BlogForm({ blogId }) {
 
         setForm({
           title: b.title || '',
-          excerpt: b.excerpt || '',
-          content: b.content || '',
+          excerpt: b.excerpt || b.summary || '',
+          content: b.content || b.summary || '', // ✅ FIX HERE
           category: b.category || 'Technology',
           tags: Array.isArray(b.tags) ? b.tags.join(', ') : '',
           featured: !!b.featured,
         });
-
         setExistingImage(b.image || '');
         setRemoveImage(false);
       } catch {
@@ -347,11 +346,10 @@ export default function BlogForm({ blogId }) {
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === tab
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${activeTab === tab
                     ? 'bg-[var(--accent)]/10 text-[var(--accent)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                }`}
+                  }`}
               >
                 {tab === 'content' ? (
                   <>
@@ -433,11 +431,10 @@ export default function BlogForm({ blogId }) {
                         type="button"
                         onClick={handleAiEnhance}
                         disabled={isAiButtonDisabled}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                          isAiButtonDisabled
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isAiButtonDisabled
                             ? 'text-[var(--text-muted)] cursor-not-allowed'
                             : 'text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]/90'
-                        }`}
+                          }`}
                         whileHover={isAiButtonDisabled ? {} : { scale: 1.05 }}
                         whileTap={isAiButtonDisabled ? {} : { scale: 0.95 }}
                       >
@@ -604,9 +601,8 @@ export default function BlogForm({ blogId }) {
                     onClick={() =>
                       setForm((prev) => ({ ...prev, featured: !prev.featured }))
                     }
-                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-                      form.featured ? 'bg-amber-400' : 'bg-[var(--border)]'
-                    }`}
+                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${form.featured ? 'bg-amber-400' : 'bg-[var(--border)]'
+                      }`}
                   >
                     <motion.div
                       className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow"
