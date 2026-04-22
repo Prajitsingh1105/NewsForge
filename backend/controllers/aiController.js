@@ -1,10 +1,25 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 exports.enhanceContent = async (req, res) => {
   try {
+    console.log("🔥 AI ROUTE HIT");
+
+    const key = process.env.GEMINI_API_KEY;
+
+    console.log("🔑 KEY CHECK:", key ? "FOUND ✅" : "MISSING ❌");
+
+    if (!key) {
+      return res.status(500).json({
+        message: "GEMINI API KEY MISSING",
+      });
+    }
+
     const { title, excerpt, content } = req.body;
+
+    console.log("📩 REQUEST DATA:", {
+      titleLength: title?.length,
+      contentLength: content?.length,
+    });
 
     if (!title || !content) {
       return res.status(400).json({
@@ -12,8 +27,10 @@ exports.enhanceContent = async (req, res) => {
       });
     }
 
+    const genAI = new GoogleGenerativeAI(key);
+
     const model = genAI.getGenerativeModel({
-      model: "gemini-pro",
+      model: "gemini-1.5-flash", // ✅ safer than gemini-pro
     });
 
     const prompt = `
@@ -40,30 +57,47 @@ Excerpt:
 ${excerpt}
 
 Content:
-${content}
+${content.slice(0, 5000)}
 `;
 
+    console.log("🧠 Sending request to Gemini...");
+
     const result = await model.generateContent(prompt);
+
     const response = await result.response;
     const text = response.text();
 
-    // 🧠 Extract JSON safely
+    console.log("🤖 RAW AI RESPONSE:", text);
+
+    // 🧠 Clean + parse JSON safely
     let parsed;
+
     try {
-      parsed = JSON.parse(text);
-    } catch {
+      const clean = text
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
+      parsed = JSON.parse(clean);
+    } catch (err) {
+      console.error("❌ JSON PARSE FAILED");
+
       return res.status(500).json({
-        message: "AI returned invalid format",
+        message: "AI returned invalid JSON",
         raw: text,
       });
     }
 
+    console.log("✅ AI PARSED SUCCESS");
+
     res.json(parsed);
 
   } catch (error) {
-    console.error("Gemini AI error:", error);
+    console.error("💥 GEMINI ERROR:", error);
+
     res.status(500).json({
       message: "AI enhancement failed",
+      error: error.message,
     });
   }
 };
