@@ -7,7 +7,7 @@ const fs = require('fs');
 
 const authRoutes = require('./routes/auth');
 const blogRoutes = require('./routes/blogs');
-const scrapedRoutes = require('./routes/scraped'); // ADD THIS
+const scrapedRoutes = require('./routes/scraped');
 
 const app = express();
 
@@ -22,13 +22,39 @@ if (!fs.existsSync(uploadPath)) {
 }
 
 // ======================
+// CORS Config
+// ======================
+const allowedOrigins = process.env.FRONTEND_URLS
+  ? process.env.FRONTEND_URLS.split(',').map((origin) => origin.trim())
+  : [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'https://news-forge-gamma.vercel.app',
+    ];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 200,
+  })
+);
+
+app.options('*', cors());
+
+// ======================
 // Middleware
 // ======================
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -42,7 +68,7 @@ app.use('/uploads', express.static(uploadPath));
 // ======================
 app.use('/api/admin', authRoutes);
 app.use('/api/blogs', blogRoutes);
-app.use('/api/scraped_blogs', scrapedRoutes); // ADD THIS - scraped routes will be under /api/scraped
+app.use('/api/scraped_blogs', scrapedRoutes);
 
 // ======================
 // Health check
@@ -50,16 +76,18 @@ app.use('/api/scraped_blogs', scrapedRoutes); // ADD THIS - scraped routes will 
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'NewsForge API running',
-    timestamp: new Date()
+    timestamp: new Date(),
+    allowedOrigins,
   });
 });
 
 // ======================
 // MongoDB Connection
 // ======================
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/newsforge')
+mongoose
+  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/newsforge')
   .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('❌ MongoDB error:', err));
+  .catch((err) => console.error('❌ MongoDB error:', err));
 
 // ======================
 // Start Server
@@ -68,4 +96,5 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`🚀 NewsForge API running on port ${PORT}`);
+  console.log('✅ Allowed CORS origins:', allowedOrigins);
 });
