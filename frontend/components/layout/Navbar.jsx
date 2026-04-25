@@ -57,7 +57,9 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!searchOpen) return;
-    const t = setTimeout(() => searchInputRef.current?.focus(), 40);
+    const t = setTimeout(() => {
+      if (searchInputRef.current) searchInputRef.current.focus();
+    }, 40);
     return () => clearTimeout(t);
   }, [searchOpen]);
 
@@ -101,8 +103,11 @@ export default function Navbar() {
       const params = new URLSearchParams(searchParams.toString());
 
       Object.entries(updates).forEach(([key, value]) => {
-        if (!value || !String(value).trim()) params.delete(key);
-        else params.set(key, value);
+        if (!value || !String(value).trim()) {
+          params.delete(key);
+        } else {
+          params.set(key, value);
+        }
       });
 
       return params.toString();
@@ -204,9 +209,10 @@ export default function Navbar() {
             {...tickerMotion}
             className="inline-block whitespace-nowrap font-medium tracking-wide"
           >
-            BREAKING: Latest updates in AI, Technology, and World Affairs — Stay informed with NewsForge&nbsp;&nbsp;&nbsp;&nbsp;
-            •&nbsp;&nbsp;&nbsp;&nbsp;Top stories curated for you every hour — Never miss a beat&nbsp;&nbsp;&nbsp;&nbsp;
-            •&nbsp;&nbsp;&nbsp;&nbsp;Global coverage, local insights — NewsForge Premium Now Available
+            BREAKING: Latest updates in AI, Technology, and World Affairs — Stay informed with
+            NewsForge&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;Top stories curated for you
+            every hour — Never miss a beat&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;Global
+            coverage, local insights — NewsForge Premium Now Available
           </motion.span>
         </div>
       </div>

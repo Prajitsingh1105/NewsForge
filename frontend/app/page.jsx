@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense, useMemo } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -17,7 +17,7 @@ import { formatDistanceToNow } from 'date-fns';
 const LOCAL_FALLBACK_IMAGE = '/images/fallback-blog.jpg';
 
 function SafeHeroImage({ blog }) {
-  const primarySrc = useMemo(() => getImageUrl(blog?.image), [blog?.image]);
+  const primarySrc = useMemo(() => getImageUrl(blog?.image) || LOCAL_FALLBACK_IMAGE, [blog?.image]);
   const [imgSrc, setImgSrc] = useState(primarySrc);
   const [failed, setFailed] = useState(false);
 
@@ -27,46 +27,64 @@ function SafeHeroImage({ blog }) {
   }, [primarySrc]);
 
   return (
-    <>
-      {!failed ? (
-        <Image
-          src={imgSrc}
-          alt={blog?.title || 'Featured story'}
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-          onError={() => {
-            setImgSrc(LOCAL_FALLBACK_IMAGE);
-            setFailed(true);
-          }}
-        />
-      ) : (
-        <Image
-          src={LOCAL_FALLBACK_IMAGE}
-          alt={blog?.title || 'Featured story'}
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-        />
-      )}
-    </>
+    <Image
+      src={failed ? LOCAL_FALLBACK_IMAGE : imgSrc}
+      alt={blog?.title || 'Featured story'}
+      fill
+      priority
+      className="object-cover"
+      sizes="100vw"
+      onError={() => {
+        if (!failed) {
+          setImgSrc(LOCAL_FALLBACK_IMAGE);
+          setFailed(true);
+        }
+      }}
+    />
+  );
+}
+
+function SafeThumbImage({ blog }) {
+  const primarySrc = useMemo(() => getImageUrl(blog?.image) || LOCAL_FALLBACK_IMAGE, [blog?.image]);
+  const [imgSrc, setImgSrc] = useState(primarySrc);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setImgSrc(primarySrc);
+    setFailed(false);
+  }, [primarySrc]);
+
+  return (
+    <Image
+      src={failed ? LOCAL_FALLBACK_IMAGE : imgSrc}
+      alt={blog?.title || 'Story image'}
+      fill
+      className="object-cover transition-transform duration-500 group-hover:scale-105"
+      sizes="(max-width: 640px) 112px, 144px"
+      onError={() => {
+        if (!failed) {
+          setImgSrc(LOCAL_FALLBACK_IMAGE);
+          setFailed(true);
+        }
+      }}
+    />
   );
 }
 
 function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   const shouldReduceMotion = useReducedMotion();
+
+  const category = searchParams.get('category') || 'All';
+  const search = searchParams.get('search') || '';
 
   const [blogs, setBlogs] = useState([]);
   const [featured, setFeatured] = useState(null);
   const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [category, setCategory] = useState(searchParams.get('category') || 'All');
-  const [search] = useState(searchParams.get('search') || '');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
@@ -86,50 +104,71 @@ function HomeContent() {
         exit: { opacity: 0 },
       };
 
-  const fetchBlogs = useCallback(async (cat, pg, reset = false) => {
-    if (pg === 1) setLoading(true);
-    else setLoadingMore(true);
+  const buildQueryString = useCallback(
+    (updates) => {
+      const params = new URLSearchParams(searchParams.toString());
 
-    try {
-      const params = { page: pg, limit: 9 };
-      if (cat !== 'All') params.category = cat;
-      if (search) params.search = search;
-
-      const res = await blogApi.getAll(params);
-      const newBlogs = res.data.blogs || [];
-      const totalPages = res.data?.pagination?.pages || 1;
-
-      if (reset || pg === 1) {
-        setBlogs(newBlogs);
-
-        if (pg === 1 && cat === 'All' && !search) {
-          const featuredBlog = newBlogs.find((b) => b.featured) || newBlogs[0] || null;
-          setFeatured(featuredBlog);
+      Object.entries(updates).forEach(([key, value]) => {
+        if (!value || !String(value).trim() || value === 'All') {
+          params.delete(key);
         } else {
+          params.set(key, String(value));
+        }
+      });
+
+      return params.toString();
+    },
+    [searchParams]
+  );
+
+  const fetchBlogs = useCallback(
+    async (cat, pg, reset = false) => {
+      if (pg === 1) setLoading(true);
+      else setLoadingMore(true);
+
+      try {
+        const params = { page: pg, limit: 9 };
+
+        if (cat !== 'All') params.category = cat;
+        if (search.trim()) params.search = search.trim();
+
+        const res = await blogApi.getAll(params);
+        const newBlogs = res?.data?.blogs || [];
+        const totalPages = res?.data?.pagination?.pages || 1;
+
+        if (reset || pg === 1) {
+          setBlogs(newBlogs);
+
+          if (pg === 1 && cat === 'All' && !search.trim()) {
+            const featuredBlog = newBlogs.find((b) => b.featured) || newBlogs[0] || null;
+            setFeatured(featuredBlog);
+          } else {
+            setFeatured(null);
+          }
+        } else {
+          setBlogs((prev) => [...prev, ...newBlogs]);
+        }
+
+        setHasMore(pg < totalPages);
+      } catch (err) {
+        console.error('Failed to fetch blogs:', err);
+        if (pg === 1) {
+          setBlogs([]);
           setFeatured(null);
         }
-      } else {
-        setBlogs((prev) => [...prev, ...newBlogs]);
+        setHasMore(false);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
-
-      setHasMore(pg < totalPages);
-    } catch (err) {
-      console.error('Failed to fetch blogs:', err);
-      if (pg === 1) {
-        setBlogs([]);
-        setFeatured(null);
-      }
-      setHasMore(false);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [search]);
+    },
+    [search]
+  );
 
   const fetchTrending = useCallback(async () => {
     try {
       const res = await blogApi.getAll({ limit: 4 });
-      setTrending((res.data.blogs || []).slice(0, 4));
+      setTrending((res?.data?.blogs || []).slice(0, 4));
     } catch (err) {
       console.error('Failed to fetch trending blogs:', err);
       setTrending([]);
@@ -137,8 +176,8 @@ function HomeContent() {
   }, []);
 
   useEffect(() => {
-    fetchBlogs(category, 1, true);
     setPage(1);
+    fetchBlogs(category, 1, true);
   }, [category, search, fetchBlogs]);
 
   useEffect(() => {
@@ -146,23 +185,27 @@ function HomeContent() {
   }, [fetchTrending]);
 
   const handleCategoryChange = (cat) => {
-    setCategory(cat);
-    router.push(cat === 'All' ? '/' : `/?category=${encodeURIComponent(cat)}`, { scroll: false });
+    const qs = buildQueryString({
+      category: cat === 'All' ? null : cat,
+      page: null,
+    });
+
+    router.push(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
   };
 
-  const handleLoadMore = () => {
+  const handleLoadMore = async () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchBlogs(category, nextPage);
+    await fetchBlogs(category, nextPage, false);
   };
 
   const displayBlogs =
-    featured && category === 'All' && !search
+    featured && category === 'All' && !search.trim()
       ? blogs.filter((b) => b._id !== featured._id)
       : blogs;
 
   const supportingStories =
-    featured && category === 'All' && !search
+    featured && category === 'All' && !search.trim()
       ? blogs.filter((b) => b._id !== featured._id).slice(0, 2)
       : [];
 
@@ -237,7 +280,10 @@ function HomeContent() {
 
                   <motion.aside
                     {...fadeUp}
-                    transition={{ duration: shouldReduceMotion ? 0 : 0.45, delay: shouldReduceMotion ? 0 : 0.05 }}
+                    transition={{
+                      duration: shouldReduceMotion ? 0 : 0.45,
+                      delay: shouldReduceMotion ? 0 : 0.05,
+                    }}
                     className="lg:col-span-4 flex flex-col gap-4"
                   >
                     <div className="flex items-center gap-3 px-1">
@@ -259,16 +305,7 @@ function HomeContent() {
                         >
                           <div className="flex gap-4">
                             <div className="relative h-24 w-28 sm:h-28 sm:w-36 shrink-0 overflow-hidden rounded-2xl bg-[var(--bg-secondary)]">
-                              <Image
-                                src={getImageUrl(blog?.image) || LOCAL_FALLBACK_IMAGE}
-                                alt={blog?.title || 'Story image'}
-                                fill
-                                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                sizes="(max-width: 640px) 112px, 144px"
-                                onError={(e) => {
-                                  e.currentTarget.src = LOCAL_FALLBACK_IMAGE;
-                                }}
-                              />
+                              <SafeThumbImage blog={blog} />
                             </div>
 
                             <div className="min-w-0 flex-1">
@@ -341,7 +378,10 @@ function HomeContent() {
           {trending.length > 0 && (
             <motion.section
               {...fadeUp}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.08 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.35,
+                delay: shouldReduceMotion ? 0 : 0.08,
+              }}
               className="py-8 sm:py-10"
             >
               <div className="mb-5 flex items-center gap-3">
@@ -402,7 +442,7 @@ function HomeContent() {
                 </div>
 
                 <h2 className="font-display font-bold text-2xl sm:text-3xl text-[var(--text-primary)]">
-                  News
+                  {category === 'All' ? 'News' : `${category} News`}
                 </h2>
               </div>
 
@@ -442,12 +482,17 @@ function HomeContent() {
                 </motion.div>
               ) : (
                 <motion.div
-                  key={`grid-${category}`}
+                  key={`grid-${category}-${search}`}
                   {...fadeOnly}
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
                   {displayBlogs.map((blog, i) => (
-                    <BlogCard key={blog._id} blog={blog} variant={i < 2 ? 'feature' : 'default'} index={i} />
+                    <BlogCard
+                      key={blog._id}
+                      blog={blog}
+                      variant={i < 2 ? 'feature' : 'default'}
+                      index={i}
+                    />
                   ))}
                 </motion.div>
               )}
