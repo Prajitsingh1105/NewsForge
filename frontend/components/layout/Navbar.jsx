@@ -1,63 +1,91 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Search, Moon, Sun, Menu, X, Zap, ChevronRight } from 'lucide-react';
-import { useTheme } from '../../hooks/useTheme.js';
-import { blogApi } from '../../lib/api.js';
+import { useTheme } from '../../hooks/useTheme';
+import { blogApi } from '../../lib/api';
 
 export default function Navbar() {
   const { isDark, toggle } = useTheme();
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const shouldReduceMotion = useReducedMotion();
+
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+
   const searchRef = useRef(null);
   const searchInputRef = useRef(null);
 
+  const activeCategory = searchParams.get('category');
+  const activeSearch = searchParams.get('search');
+
+  const navLinks = useMemo(
+    () => [
+      { href: '/', label: 'Home' },
+      { href: '/?category=Technology', label: 'Tech' },
+      { href: '/?category=AI', label: 'AI' },
+      { href: '/?category=Business', label: 'Business' },
+      { href: '/?category=World', label: 'World' },
+    ],
+    []
+  );
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   useEffect(() => {
     setMobileOpen(false);
     setSearchOpen(false);
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   useEffect(() => {
-    if (searchOpen) searchInputRef.current?.focus();
+    setSearchQuery(searchParams.get('search') || '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const t = setTimeout(() => searchInputRef.current?.focus(), 40);
+    return () => clearTimeout(t);
   }, [searchOpen]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setSearchOpen(false);
-        setSearchResults([]);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
+    const query = searchQuery.trim();
+
+    if (!searchOpen || !query) {
       setSearchResults([]);
+      setSearching(false);
       return;
     }
 
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await blogApi.getAll({ search: searchQuery, limit: 5 });
-        setSearchResults(res.data.blogs || []);
+        const res = await blogApi.getAll({ search: query, limit: 5 });
+        setSearchResults(res?.data?.blogs || []);
       } catch {
         setSearchResults([]);
       } finally {
@@ -66,25 +94,114 @@ export default function Navbar() {
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, searchOpen]);
 
-  const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/?category=Technology', label: 'Tech' },
-    { href: '/?category=AI', label: 'AI' },
-    { href: '/?category=Business', label: 'Business' },
-    { href: '/?category=World', label: 'World' },
-  ];
+  const buildQueryString = useCallback(
+    (updates) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (!value || !String(value).trim()) params.delete(key);
+        else params.set(key, value);
+      });
+
+      return params.toString();
+    },
+    [searchParams]
+  );
+
+  const isActive = useCallback(
+    (href) => {
+      if (href === '/') {
+        return pathname === '/' && !activeCategory && !activeSearch;
+      }
+
+      const url = new URL(href, 'http://localhost');
+      const linkCategory = url.searchParams.get('category');
+
+      if (linkCategory) {
+        return pathname === '/' && activeCategory === linkCategory;
+      }
+
+      return pathname === url.pathname;
+    },
+    [pathname, activeCategory, activeSearch]
+  );
+
+  const navigateTo = useCallback(
+    (href) => {
+      setMobileOpen(false);
+
+      if (href === '/') {
+        router.push('/');
+        return;
+      }
+
+      const url = new URL(href, 'http://localhost');
+      const linkCategory = url.searchParams.get('category');
+
+      if (linkCategory) {
+        const qs = buildQueryString({
+          category: linkCategory,
+          search: null,
+        });
+
+        router.push(`/${qs ? `?${qs}` : ''}`, { scroll: false });
+        return;
+      }
+
+      router.push(href);
+    },
+    [router, buildQueryString]
+  );
+
+  const submitSearch = useCallback(() => {
+    const query = searchQuery.trim();
+
+    const qs = buildQueryString({
+      search: query || null,
+      category: activeCategory || null,
+    });
+
+    router.push(`/${qs ? `?${qs}` : ''}`);
+    setSearchOpen(false);
+    setMobileOpen(false);
+  }, [searchQuery, buildQueryString, activeCategory, router]);
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+    setSearchResults([]);
+
+    const qs = buildQueryString({
+      search: null,
+    });
+
+    router.push(`/${qs ? `?${qs}` : ''}`, { scroll: false });
+  }, [buildQueryString, router]);
 
   if (pathname.startsWith('/admin')) return null;
+
+  const tickerMotion = shouldReduceMotion
+    ? {}
+    : {
+        animate: { x: [0, -2000] },
+        transition: { repeat: Infinity, duration: 30, ease: 'linear' },
+      };
+
+  const headerMotion = shouldReduceMotion
+    ? {}
+    : {
+        initial: { y: -40 },
+        animate: { y: 0 },
+        transition: { type: 'spring', stiffness: 180, damping: 28 },
+      };
 
   return (
     <>
       <div className="bg-[var(--accent)] text-white text-[11px] sm:text-xs py-2 overflow-hidden border-b border-white/10">
         <div className="ticker-wrap">
           <motion.span
-            animate={{ x: [0, -2000] }}
-            transition={{ repeat: Infinity, duration: 30, ease: 'linear' }}
+            {...tickerMotion}
             className="inline-block whitespace-nowrap font-medium tracking-wide"
           >
             BREAKING: Latest updates in AI, Technology, and World Affairs — Stay informed with NewsForge&nbsp;&nbsp;&nbsp;&nbsp;
@@ -100,16 +217,14 @@ export default function Navbar() {
             ? 'bg-[var(--bg-primary)]/85 shadow-[0_8px_30px_rgba(0,0,0,0.08)] border-[var(--border)]'
             : 'bg-[var(--bg-primary)] border-[var(--border)]'
         }`}
-        initial={{ y: -40 }}
-        animate={{ y: 0 }}
-        transition={{ type: 'spring', stiffness: 220, damping: 28 }}
+        {...headerMotion}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="h-16 sm:h-18 flex items-center justify-between gap-4">
+          <div className="h-16 sm:h-[72px] flex items-center justify-between gap-4">
             <Link href="/" className="flex items-center gap-2.5 group shrink-0">
               <motion.div
                 className="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-lg shadow-[var(--accent)]/15"
-                whileHover={{ rotate: 8, scale: 1.06 }}
+                whileHover={shouldReduceMotion ? {} : { rotate: 8, scale: 1.06 }}
                 transition={{ type: 'spring', stiffness: 350, damping: 18 }}
               >
                 <Zap size={16} className="text-white fill-white" />
@@ -127,14 +242,13 @@ export default function Navbar() {
 
             <nav className="hidden md:flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-secondary)] px-1.5 py-1">
               {navLinks.map((link) => {
-                const active =
-                  pathname === link.href ||
-                  (link.href !== '/' && pathname === '/' && new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('category') === link.href.split('=')[1]);
+                const active = isActive(link.href);
 
                 return (
-                  <Link
+                  <button
                     key={link.href}
-                    href={link.href}
+                    type="button"
+                    onClick={() => navigateTo(link.href)}
                     className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                       active
                         ? 'bg-[var(--accent)] text-white'
@@ -142,7 +256,7 @@ export default function Navbar() {
                     }`}
                   >
                     {link.label}
-                  </Link>
+                  </button>
                 );
               })}
             </nav>
@@ -150,10 +264,11 @@ export default function Navbar() {
             <div className="flex items-center gap-1.5 sm:gap-2">
               <div ref={searchRef} className="relative">
                 <motion.button
-                  onClick={() => setSearchOpen(!searchOpen)}
+                  type="button"
+                  onClick={() => setSearchOpen((prev) => !prev)}
                   aria-label="Search stories"
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/25 hover:bg-[var(--bg-card)] transition-all"
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
                 >
                   <Search size={18} />
                 </motion.button>
@@ -161,10 +276,10 @@ export default function Navbar() {
                 <AnimatePresence>
                   {searchOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                      transition={{ duration: 0.16 }}
+                      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 }}
+                      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+                      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: shouldReduceMotion ? 0 : 0.16 }}
                       className="absolute right-0 top-full mt-3 w-[min(92vw,24rem)] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-2xl shadow-black/10"
                     >
                       <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-secondary)]/60">
@@ -176,13 +291,20 @@ export default function Navbar() {
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' && searchQuery.trim()) {
-                              router.push(`/?search=${encodeURIComponent(searchQuery)}`);
-                              setSearchOpen(false);
-                            }
+                            if (e.key === 'Enter') submitSearch();
+                            if (e.key === 'Escape') setSearchOpen(false);
                           }}
                           className="w-full bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none"
                         />
+                        {searchQuery && !searching && (
+                          <button
+                            type="button"
+                            onClick={clearSearch}
+                            className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)]"
+                          >
+                            Clear
+                          </button>
+                        )}
                         {searching && (
                           <div className="h-4 w-4 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
                         )}
@@ -196,7 +318,7 @@ export default function Navbar() {
                               href={`/blog/${blog._id}`}
                               onClick={() => {
                                 setSearchOpen(false);
-                                setSearchQuery('');
+                                setSearchResults([]);
                               }}
                               className="flex items-start gap-3 px-4 py-3 hover:bg-[var(--bg-secondary)] transition-colors group"
                             >
@@ -206,46 +328,60 @@ export default function Navbar() {
                               <span className="min-w-0 flex-1 text-sm text-[var(--text-primary)] line-clamp-2">
                                 {blog.title}
                               </span>
-                              <ChevronRight size={14} className="shrink-0 text-[var(--text-muted)] transition-transform group-hover:translate-x-0.5" />
+                              <ChevronRight
+                                size={14}
+                                className="shrink-0 text-[var(--text-muted)] transition-transform group-hover:translate-x-0.5"
+                              />
                             </Link>
                           ))}
                         </div>
                       )}
 
-                      {searchQuery && !searching && searchResults.length === 0 && (
+                      {searchQuery.trim() && !searching && searchResults.length === 0 && (
                         <div className="px-4 py-8 text-center text-sm text-[var(--text-muted)]">
                           No results found
                         </div>
                       )}
+
+                      <div className="border-t border-[var(--border)] px-4 py-3 bg-[var(--bg-secondary)]/40">
+                        <button
+                          type="button"
+                          onClick={submitSearch}
+                          className="w-full rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95"
+                        >
+                          Search all stories
+                        </button>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
               <motion.button
+                type="button"
                 onClick={toggle}
                 aria-label="Toggle theme"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/25 hover:bg-[var(--bg-card)] transition-all"
-                whileTap={{ scale: 0.95 }}
+                whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {isDark ? (
                     <motion.div
                       key="sun"
-                      initial={{ rotate: -90, opacity: 0, scale: 0.9 }}
-                      animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                      exit={{ rotate: 90, opacity: 0, scale: 0.9 }}
-                      transition={{ duration: 0.18 }}
+                      initial={shouldReduceMotion ? { opacity: 0 } : { rotate: -90, opacity: 0, scale: 0.9 }}
+                      animate={shouldReduceMotion ? { opacity: 1 } : { rotate: 0, opacity: 1, scale: 1 }}
+                      exit={shouldReduceMotion ? { opacity: 0 } : { rotate: 90, opacity: 0, scale: 0.9 }}
+                      transition={{ duration: shouldReduceMotion ? 0 : 0.18 }}
                     >
                       <Sun size={18} />
                     </motion.div>
                   ) : (
                     <motion.div
                       key="moon"
-                      initial={{ rotate: 90, opacity: 0, scale: 0.9 }}
-                      animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                      exit={{ rotate: -90, opacity: 0, scale: 0.9 }}
-                      transition={{ duration: 0.18 }}
+                      initial={shouldReduceMotion ? { opacity: 0 } : { rotate: 90, opacity: 0, scale: 0.9 }}
+                      animate={shouldReduceMotion ? { opacity: 1 } : { rotate: 0, opacity: 1, scale: 1 }}
+                      exit={shouldReduceMotion ? { opacity: 0 } : { rotate: -90, opacity: 0, scale: 0.9 }}
+                      transition={{ duration: shouldReduceMotion ? 0 : 0.18 }}
                     >
                       <Moon size={18} />
                     </motion.div>
@@ -254,7 +390,8 @@ export default function Navbar() {
               </motion.button>
 
               <button
-                onClick={() => setMobileOpen(!mobileOpen)}
+                type="button"
+                onClick={() => setMobileOpen((prev) => !prev)}
                 aria-label="Open menu"
                 className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/25 hover:bg-[var(--bg-card)] transition-all"
               >
@@ -267,33 +404,61 @@ export default function Navbar() {
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              initial={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+              animate={shouldReduceMotion ? { opacity: 1 } : { height: 'auto', opacity: 1 }}
+              exit={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
               className="md:hidden overflow-hidden border-t border-[var(--border)] bg-[var(--bg-primary)]"
             >
               <div className="px-4 py-4 space-y-2">
                 {navLinks.map((link) => {
-                  const active =
-                    pathname === link.href ||
-                    (link.href !== '/' && pathname === '/' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('category') === link.href.split('=')[1]);
+                  const active = isActive(link.href);
 
                   return (
-                    <Link
+                    <button
                       key={link.href}
-                      href={link.href}
-                      className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
+                      type="button"
+                      onClick={() => navigateTo(link.href)}
+                      className={`w-full flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
                         active
                           ? 'bg-[var(--accent)] text-white'
                           : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
                       }`}
                     >
                       <span>{link.label}</span>
-                      <ChevronRight size={14} className={active ? 'text-white/80' : 'text-[var(--text-muted)]'} />
-                    </Link>
+                      <ChevronRight
+                        size={14}
+                        className={active ? 'text-white/80' : 'text-[var(--text-muted)]'}
+                      />
+                    </button>
                   );
                 })}
+
+                <div className="pt-2">
+                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-2">
+                    <div className="flex items-center gap-2 px-2 py-2">
+                      <Search size={16} className="text-[var(--text-muted)] shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="Search stories..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') submitSearch();
+                        }}
+                        className="w-full bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={submitSearch}
+                      className="mt-2 w-full rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white"
+                    >
+                      Search
+                    </button>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
