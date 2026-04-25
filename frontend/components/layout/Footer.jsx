@@ -26,7 +26,7 @@ export default function Footer() {
 
                 <div className="flex flex-col">
                   <span className="font-display font-black text-2xl leading-none text-[var(--text-primary)]">
-                    News<span className="text-[var(--accent)]">Forge</span>
+                    Groks<span className="text-[var(--accent)]">Blog</span>
                   </span>
                   <span className="mt-1 text-[11px] uppercase tracking-[0.18em] text-[var(--text-muted)]">
                     Modern sports & world news
@@ -127,7 +127,7 @@ export default function Footer() {
           <div className="mt-12 border-t border-[var(--border)] pt-5 sm:pt-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-[var(--text-muted)]">
-                © {new Date().getFullYear()} NewsForge. Built with Next.js + MongoDB.
+                © {new Date().getFullYear()} GroksBlog. Built with Next.js + MongoDB.
               </p>
 
               <p className="text-xs text-[var(--text-muted)]">

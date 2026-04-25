@@ -32,7 +32,7 @@ export default function AdminSidebar() {
           </div>
           <div>
             <span className="font-display font-black text-lg text-[var(--text-primary)]">
-              News<span className="text-[var(--accent)]">Forge</span>
+              Groks<span className="text-[var(--accent)]">Blog</span>
             </span>
             <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Admin Panel</p>
           </div>

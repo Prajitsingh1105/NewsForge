@@ -210,7 +210,7 @@ export default function Navbar() {
             className="inline-block whitespace-nowrap font-medium tracking-wide"
           >
             BREAKING: Latest updates in AI, Technology, and World Affairs — Stay informed with
-            NewsForge&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;Top stories curated for you
+            GroksBlog&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;Top stories curated for you
             every hour — Never miss a beat&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;Global
             coverage, local insights — NewsForge Premium Now Available
           </motion.span>
@@ -238,7 +238,7 @@ export default function Navbar() {
 
               <div className="leading-none">
                 <span className="font-display font-black text-lg sm:text-xl tracking-tight text-[var(--text-primary)]">
-                  News<span className="text-[var(--accent)]">Forge</span>
+                  Groks<span className="text-[var(--accent)]">Blog</span>
                 </span>
                 <div className="hidden sm:block text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)] mt-1">
                   News that moves fast
