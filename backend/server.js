@@ -12,7 +12,7 @@ const scrapedRoutes = require('./routes/scraped');
 const app = express();
 
 // ======================
-// 🔥 Ensure uploads folder exists
+// Ensure uploads folder exists
 // ======================
 const uploadPath = path.join(__dirname, 'uploads');
 
@@ -32,47 +32,34 @@ const allowedOrigins = process.env.FRONTEND_URLS
       'https://news-forge-gamma.vercel.app',
     ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
 
-      return callback(new Error(`CORS blocked for origin: ${origin}`));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    optionsSuccessStatus: 200,
-  })
-);
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200,
+};
 
-app.options('*', cors());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
-// ======================
-// Middleware
-// ======================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ======================
-// Static files (images)
-// ======================
 app.use('/uploads', express.static(uploadPath));
 
-// ======================
-// Routes
-// ======================
 app.use('/api/admin', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/scraped_blogs', scrapedRoutes);
 
-// ======================
-// Health check
-// ======================
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'NewsForge API running',
@@ -81,17 +68,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ======================
-// MongoDB Connection
-// ======================
 mongoose
   .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/newsforge')
   .then(() => console.log('✅ MongoDB connected'))
   .catch((err) => console.error('❌ MongoDB error:', err));
 
-// ======================
-// Start Server
-// ======================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
